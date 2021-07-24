@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -125,11 +126,15 @@ class _LoginState extends State<Login> {
                                       vertical: 10, horizontal: 40),
                                   primary: Color(0xFF9B3D3D),
                                 ),
-                                onPressed: () {
+                                onPressed: () async {
                                   auth.signInWithEmailAndPassword(
                                     email: email,
                                     password: password,
                                   );
+
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  prefs.setString('email', email);
 
                                   Navigator.pushNamed(context, '/homepage');
                                 },

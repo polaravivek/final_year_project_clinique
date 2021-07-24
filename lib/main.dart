@@ -7,12 +7,15 @@ import 'package:flutter/widgets.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var email = prefs.getString('email');
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -20,11 +23,11 @@ void main() async {
         primaryColor: Color(0xFFFFB5B5),
         accentColor: Color(0xFFFFB5B5),
       ),
-      initialRoute: '/register',
+      initialRoute: email == null ? '/register' : '/homepage',
       routes: {
         '/register': (context) => MyApp(),
         '/login': (context) => Login(),
-        '/homepage': (context) => HomePage(),
+        '/homepage': (context) => MapActivity(),
       },
     ),
   );
@@ -59,6 +62,7 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
@@ -89,13 +93,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ref = fb.reference();
 
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Color(0xFFFFB5B5),
     ));
-
     return MaterialApp(
       theme: ThemeData(
           scaffoldBackgroundColor: Color(0xFFFFDDDD),
@@ -194,144 +202,21 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 60),
-                        child: TextField(
-                          cursorColor: Color(0xFF9B3D3D),
-                          controller: _phoneController,
-                          onChanged: (v) {
-                            phoneNo = v.toString();
-                          },
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFD99D9D),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFAA6262),
-                              ),
-                            ),
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter Your Phone No.',
-                          ),
-                        ),
+                      RegisterTextField(
+                        controller: _phoneController,
+                        hintText: 'Enter Your Phone No.',
                       ),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 60),
-                        child: TextField(
-                          cursorColor: Color(0xFF9B3D3D),
-                          onChanged: (v) {
-                            setState(() {
-                              email = v.trim();
-                            });
-                          },
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFD99D9D),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFAA6262),
-                              ),
-                            ),
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter Your Email',
-                          ),
-                        ),
+                      RegisterTextField(
+                        controller: _emailController,
+                        hintText: 'Enter Email Address',
                       ),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 60),
-                        child: TextField(
-                          cursorColor: Color(0xFF9B3D3D),
-                          controller: _passwordController,
-                          onChanged: (v) {
-                            setState(() {
-                              password = v.toString();
-                            });
-                          },
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFD99D9D),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFAA6262),
-                              ),
-                            ),
-                            border: OutlineInputBorder(),
-                            hintText: 'Create Password',
-                          ),
-                        ),
+                      RegisterTextField(
+                        controller: _passwordController,
+                        hintText: 'Create Password',
                       ),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 60),
-                        child: TextField(
-                          cursorColor: Color(0xFF9B3D3D),
-                          controller: _confirmPasswordController,
-                          onChanged: (v) {
-                            confirmPass = v.toString();
-                          },
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFD99D9D),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFAA6262),
-                              ),
-                            ),
-                            border: OutlineInputBorder(),
-                            hintText: 'Confirm Password',
-                          ),
-                        ),
+                      RegisterTextField(
+                        controller: _confirmPasswordController,
+                        hintText: 'Confirm Password',
                       ),
                       Container(
                         padding:
@@ -350,27 +235,40 @@ class _MyAppState extends State<MyApp> {
                                         vertical: 10, horizontal: 30),
                                     primary: Color(0xFF9B3D3D)),
                                 onPressed: () async {
-                                  final authcreate =
-                                      await auth.createUserWithEmailAndPassword(
-                                    email: email,
-                                    password: password,
-                                  );
+                                  if (_passwordController.text.compareTo(
+                                          _confirmPasswordController.text) ==
+                                      0) {
+                                    final authcreate = await auth
+                                        .createUserWithEmailAndPassword(
+                                      email: email,
+                                      password: _passwordController.text,
+                                    );
 
-                                  print(authcreate.user.uid);
-
-                                  final refer = ref
-                                      .child("userinfo")
-                                      .child(auth.currentUser.uid);
-                                  UserInfoModel userInfoModel =
-                                      new UserInfoModel(name, email, phoneNo,
-                                          _dateController.text);
-                                  refer.child("name").set(userInfoModel.name);
-                                  refer.child("email").set(userInfoModel.email);
-                                  refer
-                                      .child("phoneNo")
-                                      .set(userInfoModel.phoneNo);
-                                  refer.child("dob").set(userInfoModel.dob);
-                                  Navigator.pushNamed(context, '/homepage');
+                                    if (authcreate != null) {
+                                      UserInfoModel userInfoModel =
+                                          new UserInfoModel(
+                                              name,
+                                              _emailController.text.trim(),
+                                              _phoneController.text,
+                                              _dateController.text);
+                                      final refer = ref
+                                          .child("userinfo")
+                                          .child(auth.currentUser.uid)
+                                          .set({
+                                        "name": userInfoModel.name,
+                                        "email": userInfoModel.email,
+                                        "phoneNo": userInfoModel.phoneNo,
+                                        "dob": userInfoModel.dob
+                                      }).then((value) async {
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        prefs.setString(
+                                            'email', userInfoModel.email);
+                                      });
+                                    }
+                                  } else {
+                                    return Text("password doesn't match");
+                                  }
                                 },
                                 child: Text("Register"),
                               ),
@@ -392,7 +290,7 @@ class _MyAppState extends State<MyApp> {
                                   ),
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -402,6 +300,50 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class RegisterTextField extends StatelessWidget {
+  const RegisterTextField({
+    Key key,
+    @required this.controller,
+    @required this.hintText,
+  });
+
+  final TextEditingController controller;
+  final String hintText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 60),
+      child: TextField(
+        cursorColor: Color(0xFF9B3D3D),
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
+            borderSide: BorderSide(
+              color: Color(0xFFD99D9D),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
+            borderSide: BorderSide(
+              color: Color(0xFFAA6262),
+            ),
+          ),
+          border: OutlineInputBorder(),
+          hintText: hintText,
         ),
       ),
     );
