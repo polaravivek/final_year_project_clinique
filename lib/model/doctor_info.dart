@@ -4,9 +4,10 @@ class ModelDoctorInfo {
       doctorName,
       eveningTime,
       morningTime,
-      specialization;
-  final double latitude, longitude;
-  final int fees;
+      specialization,
+      docId;
+  final double latitude, longitude, distance;
+  final int fees, review;
 
   ModelDoctorInfo(
     this.clinicName,
@@ -18,5 +19,8 @@ class ModelDoctorInfo {
     this.specialization,
     this.latitude,
     this.longitude,
+    this.distance,
+    this.review,
+    this.docId,
   );
 }

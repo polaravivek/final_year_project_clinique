@@ -1,4 +1,5 @@
 import 'package:clinique/model/doctor_info.dart';
+import 'package:clinique/selectedClinic.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -14,11 +15,12 @@ class MapActivity extends StatefulWidget {
 
 class _MapActivityState extends State<MapActivity> {
   GoogleMapController _myController;
-  Set<Marker> _marker = {};
+  Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   CameraPosition _cameraPosition;
   final databaseRef = FirebaseDatabase.instance.reference();
 
-  List<ModelDoctorInfo> list = List();
+  static List<ModelDoctorInfo> list = List();
+  static List<ModelDoctorInfo> listNew = List();
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
     _myController = controller;
@@ -28,17 +30,16 @@ class _MapActivityState extends State<MapActivity> {
     _myController.animateCamera(
       CameraUpdate.newLatLngZoom(_center, 17),
     );
-    _marker.add(
-      Marker(
-        markerId: MarkerId('id-1'),
-        position: _center,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      ),
+
+    markers[MarkerId('id-1')] = Marker(
+      markerId: MarkerId('id-1'),
+      position: _center,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
     );
   }
 
   Future<void> printFirebase() async {
-    await databaseRef.child("doctorInfo").get().then((DataSnapshot snapshot) {
+    await databaseRef.child("doctorInfo").once().then((DataSnapshot snapshot) {
       Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
       LatLng pos;
       var count = 1;
@@ -59,16 +60,47 @@ class _MapActivityState extends State<MapActivity> {
               long = value;
             }
           });
+
           pos = LatLng(lat, long);
+
           count++;
           setState(() {
-            _marker.add(
-              Marker(
-                markerId: MarkerId('id-$count'),
+            final distance = Geolocator.distanceBetween(_center.latitude,
+                _center.longitude, pos.latitude, pos.longitude);
+
+            if (distance < 400) {
+              final markerId = MarkerId('id-$count');
+              markers[MarkerId('id-$count')] = Marker(
+                markerId: markerId,
                 position: pos,
                 icon: BitmapDescriptor.defaultMarker,
-              ),
-            );
+                onTap: () {
+                  print("tapped ${markers[markerId].position.latitude}");
+
+                  final Marker tappedMarker = markers[markerId];
+
+                  if (tappedMarker != null) {
+                    listNew.clear();
+
+                    setState(() {
+                      list.forEach((element) {
+                        if (element.latitude.toStringAsPrecision(7) ==
+                                tappedMarker.position.latitude
+                                    .toStringAsPrecision(7) &&
+                            element.longitude.toStringAsPrecision(7) ==
+                                tappedMarker.position.longitude
+                                    .toStringAsPrecision(7)) {
+                          listNew.add(element);
+                        }
+                      });
+                    });
+                  } else {
+                    print("Tapped marker is NULL..");
+                  }
+                },
+              );
+              _myController.showMarkerInfoWindow(MarkerId('id-$count'));
+            }
           });
         });
       });
@@ -79,26 +111,27 @@ class _MapActivityState extends State<MapActivity> {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
     setState(() {
-      print("here");
       _center = LatLng(position.latitude, position.longitude);
       _cameraPosition = CameraPosition(target: _center, zoom: 15.0);
 
-      _marker.add(
-        Marker(
-          position: _center,
-          markerId: MarkerId('id-1'),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        ),
+      markers[MarkerId('id-1')] = Marker(
+        position: _center,
+        markerId: MarkerId('id-1'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       );
     });
   }
 
   Future<void> getList() async {
+    _determinePosition();
+
     await databaseRef.child("doctorInfo").get().then((DataSnapshot snapshot) {
       Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
       databaseRefIndi.forEach((key, value) {
-        print(value["name"]);
+        final distance = Geolocator.distanceBetween(_center.latitude,
+            _center.longitude, value["latitude"], value["longitude"]);
+
+        print("the key is $key");
         ModelDoctorInfo modelDoctorInfo = new ModelDoctorInfo(
             value["clinicName"],
             value["address"],
@@ -108,10 +141,15 @@ class _MapActivityState extends State<MapActivity> {
             value["morning time"],
             value["specialization"],
             value["latitude"],
-            value["longitude"]);
+            value["longitude"],
+            distance,
+            value["review"],
+            key);
 
         setState(() {
-          list.add(modelDoctorInfo);
+          if (distance < 400) {
+            list.add(modelDoctorInfo);
+          }
         });
       });
     });
@@ -121,9 +159,8 @@ class _MapActivityState extends State<MapActivity> {
   void initState() {
     super.initState();
 
-    _determinePosition();
-    printFirebase();
-    getList();
+    _determinePosition()
+        .then((value) => printFirebase().then((value) => getList()));
   }
 
   String dropdownValue = 'Distance';
@@ -142,6 +179,7 @@ class _MapActivityState extends State<MapActivity> {
     }
 
     Widget UI(
+        int index,
         String clinicName,
         String address,
         String doctorName,
@@ -150,120 +188,189 @@ class _MapActivityState extends State<MapActivity> {
         String morningTime,
         String specialization,
         double latitude,
-        double longitude) {
-      return Container(
-        width: 270,
-        child: Card(
-          elevation: 5,
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '$clinicName',
-                  style: TextStyle(
-                    color: Color(0xff8A1818),
-                    fontSize: 16,
+        double longitude,
+        int review,
+        double distance,
+        String docId) {
+      ModelDoctorInfo modelDoctorInfo;
+      return GestureDetector(
+        onTap: () {
+          if (listNew.length != 0) {
+            print(listNew[index].clinicName);
+            modelDoctorInfo = new ModelDoctorInfo(
+                listNew[index].clinicName,
+                listNew[index].address,
+                listNew[index].doctorName,
+                listNew[index].eveningTime,
+                listNew[index].fees,
+                listNew[index].morningTime,
+                listNew[index].specialization,
+                listNew[index].latitude,
+                listNew[index].longitude,
+                listNew[index].distance,
+                listNew[index].review,
+                docId);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SelectedClinic(modelDoctorInfo)));
+          } else {
+            print(list[index].clinicName);
+            modelDoctorInfo = new ModelDoctorInfo(
+                list[index].clinicName,
+                list[index].address,
+                list[index].doctorName,
+                list[index].eveningTime,
+                list[index].fees,
+                list[index].morningTime,
+                list[index].specialization,
+                list[index].latitude,
+                list[index].longitude,
+                list[index].distance,
+                list[index].review,
+                docId);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SelectedClinic(modelDoctorInfo)));
+          }
+        },
+        child: Container(
+          width: 270,
+          child: Card(
+            elevation: 5,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '$clinicName',
+                    style: TextStyle(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff8A1818),
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 3,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: CircleAvatar(
-                        child: Icon(Icons.import_contacts_sharp),
-                        radius: 25,
+                  SizedBox(
+                    height: 3,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: CircleAvatar(
+                          child: Icon(Icons.import_contacts_sharp),
+                          radius: 25,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Name : $doctorName',
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          Text(
-                            'Specialist : $specialization',
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          Text(
-                            'Time : $morningTime / $eveningTime',
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          Text(
-                            'Fees : $fees Rs.',
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          Text(
-                            'Address : $address',
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
+                      SizedBox(
+                        width: 10,
                       ),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 5,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Review :',
-                      style: TextStyle(
-                        fontSize: 14,
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Name : $doctorName',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            Text(
+                              'Specialist : $specialization',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            Text(
+                              'Time : $morningTime / $eveningTime',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            Text(
+                              'Fees : $fees Rs.',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            Text(
+                              'Address : $address',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Review :',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 5,
-                    ),
-                    IconTheme(
-                      data: IconThemeData(
-                        color: Colors.amber,
-                        size: 16,
+                      SizedBox(
+                        width: 5,
                       ),
-                      child: starReview(2),
-                    ),
-                  ],
-                ),
-              ],
+                      IconTheme(
+                        data: IconThemeData(
+                          color: Colors.amber,
+                          size: 16,
+                        ),
+                        child: starReview(review),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
+    }
+
+    _handleTap(LatLng tappedPoint) {
+      print(tappedPoint);
+
+      print(tappedPoint.latitude);
+      print(tappedPoint.longitude);
+      print(listNew.length);
+      listNew.clear();
+
+      setState(() {
+        list.forEach((element) {
+          if (element.latitude == tappedPoint.latitude &&
+              element.longitude.toString() ==
+                  tappedPoint.longitude.toStringAsPrecision(8)) {
+            listNew.add(element);
+          }
+        });
+      });
     }
 
     return SafeArea(
@@ -389,7 +496,23 @@ class _MapActivityState extends State<MapActivity> {
                             ),
                             textStyle: MaterialStateProperty.all(
                                 TextStyle(color: Colors.white))),
-                        onPressed: () {},
+                        onPressed: () {
+                          listNew.clear();
+                          if (dropdownValue == "Distance") {
+                            setState(() {
+                              list.sort(
+                                  (a, b) => a.distance.compareTo(b.distance));
+                            });
+                          } else if (dropdownValue == "Review") {
+                            setState(() {
+                              list.sort((a, b) => a.review.compareTo(b.review));
+                            });
+                          } else {
+                            setState(() {
+                              list.sort((a, b) => a.fees.compareTo(b.fees));
+                            });
+                          }
+                        },
                         child: Text(
                           'Low-High',
                         ),
@@ -404,7 +527,23 @@ class _MapActivityState extends State<MapActivity> {
                             ),
                             textStyle: MaterialStateProperty.all(
                                 TextStyle(color: Colors.white))),
-                        onPressed: () {},
+                        onPressed: () {
+                          listNew.clear();
+                          if (dropdownValue == "Distance") {
+                            setState(() {
+                              list.sort(
+                                  (a, b) => b.distance.compareTo(a.distance));
+                            });
+                          } else if (dropdownValue == "Review") {
+                            setState(() {
+                              list.sort((a, b) => b.review.compareTo(a.review));
+                            });
+                          } else {
+                            setState(() {
+                              list.sort((a, b) => b.fees.compareTo(a.fees));
+                            });
+                          }
+                        },
                         child: Text(
                           'High-Low',
                         ),
@@ -419,7 +558,8 @@ class _MapActivityState extends State<MapActivity> {
                     children: [
                       GoogleMap(
                         onMapCreated: _onMapCreated,
-                        markers: _marker,
+                        markers: Set<Marker>.of(markers.values),
+                        onTap: _handleTap,
                         initialCameraPosition: _cameraPosition == null
                             ? CameraPosition(target: LatLng(0, 0))
                             : _cameraPosition,
@@ -447,24 +587,49 @@ class _MapActivityState extends State<MapActivity> {
                         alignment: Alignment.bottomLeft,
                         child: new Container(
                           height: 170,
-                          child: list.length == 0
-                              ? Text("data is null")
-                              : new ListView.builder(
+                          child: listNew.length != 0
+                              ? new ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   itemBuilder: (_, index) {
                                     return UI(
-                                        list[index].clinicName,
-                                        list[index].address,
-                                        list[index].doctorName,
-                                        list[index].eveningTime,
-                                        list[index].fees,
-                                        list[index].morningTime,
-                                        list[index].specialization,
-                                        list[index].latitude,
-                                        list[index].longitude);
+                                        index,
+                                        listNew[index].clinicName,
+                                        listNew[index].address,
+                                        listNew[index].doctorName,
+                                        listNew[index].eveningTime,
+                                        listNew[index].fees,
+                                        listNew[index].morningTime,
+                                        listNew[index].specialization,
+                                        listNew[index].latitude,
+                                        listNew[index].longitude,
+                                        listNew[index].review,
+                                        listNew[index].distance,
+                                        listNew[index].docId);
                                   },
-                                  itemCount: list.length,
-                                ),
+                                  itemCount: listNew.length,
+                                )
+                              : list == null
+                                  ? Text("null")
+                                  : new ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemBuilder: (_, index) {
+                                        return UI(
+                                            index,
+                                            list[index].clinicName,
+                                            list[index].address,
+                                            list[index].doctorName,
+                                            list[index].eveningTime,
+                                            list[index].fees,
+                                            list[index].morningTime,
+                                            list[index].specialization,
+                                            list[index].latitude,
+                                            list[index].longitude,
+                                            list[index].review,
+                                            list[index].distance,
+                                            list[index].docId);
+                                      },
+                                      itemCount: list.length,
+                                    ),
                         ),
                       ),
                     ],

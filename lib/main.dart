@@ -1,5 +1,6 @@
 import 'package:clinique/homepage.dart';
 import 'package:clinique/model/UserInfoModel.dart';
+import 'package:clinique/selectedClinic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -28,6 +29,7 @@ void main() async {
         '/register': (context) => MyApp(),
         '/login': (context) => Login(),
         '/homepage': (context) => MapActivity(),
+        // '/selectedClinic': (context) => SelectedClinic()
       },
     ),
   );
