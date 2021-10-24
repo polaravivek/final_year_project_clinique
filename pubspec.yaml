@@ -15,6 +15,9 @@ dependencies:
   google_maps_flutter: ^0.5.21
   geolocator: 7.0.3
   shared_preferences: 2.0.6
+  lottie: ^1.1.0
+  gradient_widgets: ^0.6.0
+  splashscreen:
 
 dev_dependencies:
   flutter_test:
@@ -27,5 +30,7 @@ dev_dependencies:
   firebase_database: 7.1.1
 
 flutter:
-
   uses-material-design: true
+  assets:
+    - assets/lottie/
+    - assets/images/
