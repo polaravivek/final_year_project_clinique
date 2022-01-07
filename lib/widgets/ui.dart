@@ -1,13 +1,14 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'model/doctor_info.dart';
 
-Widget UI(
+Widget ui(
+    String img,
     String clinicName,
     String address,
     String doctorName,
     String eveningTime,
-    int fees,
+    String fees,
     String morningTime,
     String specialization,
     double latitude,
@@ -15,7 +16,6 @@ Widget UI(
     int review,
     double distance,
     String uid) {
-  ModelDoctorInfo modelDoctorInfo;
   return Padding(
     padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16, bottom: 5),
     child: Container(
@@ -23,7 +23,7 @@ Widget UI(
         color: Color(0xffFFA8A8),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12))),
-        elevation: 8,
+        elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Column(
@@ -39,8 +39,18 @@ Widget UI(
                   Expanded(
                     flex: 1,
                     child: CircleAvatar(
-                      child: Icon(Icons.import_contacts_sharp),
-                      radius: 25,
+                      backgroundColor: Color(0xff8A1818),
+                      radius: 35,
+                      child: ClipOval(
+                        child: SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: Hero(
+                            tag: img,
+                            child: Image.network(img, fit: BoxFit.cover),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(
@@ -52,9 +62,10 @@ Widget UI(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Name : $doctorName',
+                          'Dr. $doctorName',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
                             color: Color(0xff8A1818),
                             fontSize: 16,
                           ),

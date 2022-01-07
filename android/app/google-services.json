@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "228924093512",
+    "firebase_url": "https://clinique-final-project-default-rtdb.firebaseio.com",
     "project_id": "clinique-final-project",
     "storage_bucket": "clinique-final-project.appspot.com"
   },
@@ -20,7 +21,36 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCVb8TEaS90k3_Yk0CGkao8EWIXtktWbEQ"
+          "current_key": "AIzaSyChbNHSmEY3sI8Zuhm7oCLn-fcfpEJ19y8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "228924093512-hmag1ijbv745lmqmdms2vkomcpmva730.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:228924093512:android:19a7739a53bb9f0d3a947d",
+        "android_client_info": {
+          "package_name": "com.example.list_view_cards"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "228924093512-hmag1ijbv745lmqmdms2vkomcpmva730.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChbNHSmEY3sI8Zuhm7oCLn-fcfpEJ19y8"
         }
       ],
       "services": {

@@ -5,22 +5,26 @@ class ModelDoctorInfo {
       eveningTime,
       morningTime,
       specialization,
-      docId;
+      docId,
+      img,
+      fees,
+      count;
   final double latitude, longitude, distance;
-  final int fees, review;
+  final int review;
 
   ModelDoctorInfo(
-    this.clinicName,
-    this.address,
-    this.doctorName,
-    this.eveningTime,
-    this.fees,
-    this.morningTime,
-    this.specialization,
-    this.latitude,
-    this.longitude,
-    this.distance,
-    this.review,
-    this.docId,
-  );
+      this.img,
+      this.clinicName,
+      this.address,
+      this.doctorName,
+      this.eveningTime,
+      this.fees,
+      this.morningTime,
+      this.specialization,
+      this.latitude,
+      this.longitude,
+      this.distance,
+      this.review,
+      this.docId,
+      this.count);
 }
