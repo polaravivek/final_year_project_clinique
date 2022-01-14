@@ -176,7 +176,8 @@ class _MyAppState extends State<MyApp> {
       final routeMessage = message.data["route"];
       print("onMessageOpenedApp: $routeMessage");
 
-      Navigator.popUntil(context, (route) => route is PageRoute);
+      // Navigator.popUntil(context, (route) => route is PageRoute);
+
       Navigator.push(
         context,
         MaterialPageRoute(
