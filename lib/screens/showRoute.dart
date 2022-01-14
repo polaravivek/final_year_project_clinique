@@ -17,17 +17,17 @@ FirebaseFirestore _firestore = FirebaseFirestore.instance;
 var uid;
 var ref;
 
-class Routing extends StatefulWidget {
+class ShowRouting extends StatefulWidget {
   final ModelDoctorInfo modelDoctorInfo;
   final String name;
 
-  const Routing(this.modelDoctorInfo, this.name);
+  const ShowRouting(this.modelDoctorInfo, this.name);
 
   @override
   _RouteState createState() => _RouteState();
 }
 
-class _RouteState extends State<Routing> {
+class _RouteState extends State<ShowRouting> {
   GoogleMapController _myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   final Set<Polyline> _polyline = {};
@@ -89,23 +89,25 @@ class _RouteState extends State<Routing> {
     final directions = await DirectionsRepository()
         .getDirections(origin: _center, destination: pos);
 
-    print("directions $directions");
-    if (_info != null)
-      setState(() {
-        _info = directions;
-      });
-    _polyline.add(
-      Polyline(
-        polylineId: PolylineId('overview_polyline'),
-        color: Colors.red,
-        width: 5,
-        points: _info.polylinePoints
-            .map(
-              (e) => LatLng(e.latitude, e.longitude),
-            )
-            .toList(),
-      ),
-    );
+    print("directions ${directions.totalDistance}");
+
+    setState(() {
+      _info = directions;
+    });
+    if (_info != null) {
+      _polyline.add(
+        Polyline(
+          polylineId: PolylineId('overview_polyline'),
+          color: Colors.red,
+          width: 5,
+          points: _info.polylinePoints
+              .map(
+                (e) => LatLng(e.latitude, e.longitude),
+              )
+              .toList(),
+        ),
+      );
+    }
   }
 
   @override

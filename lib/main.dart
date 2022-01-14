@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:clinique/main.controller.dart';
 import 'package:clinique/screens/homepage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/Register.dart';
 import 'screens/login.dart';
@@ -13,7 +15,6 @@ import 'screens/login.dart';
 var email;
 
 Future<void> backgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
   print(message.data.toString());
   print(message.notification.title);
 }
@@ -32,9 +33,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  MainController mainController = Get.put(MainController());
+
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
   FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  messaging.getToken().then((value) => mainController.changeToken(value));
+
+  //*terminated state
+  messaging.getInitialMessage().then((value) {
+    if (value != null) {
+      print(value.notification.title);
+    }
+  });
 
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
@@ -54,6 +66,7 @@ void main() async {
     print('User declined or has not accepted permission');
   }
 
+//*foreground state
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     RemoteNotification notification = message.notification;
     AndroidNotification android = message.notification?.android;
@@ -118,12 +131,19 @@ void main() async {
       ),
       debugShowCheckedModeBanner: false,
       routes: {
-        '/myApp': (context) => MyApp(),
-        '/register': (context) => Register(),
-        '/login': (context) => Login(),
-        '/homepage': (context) => MapActivity(),
+        '/myApp': (_) => MyApp(),
+        '/register': (_) => Register(),
+        '/login': (_) => Login(),
+        '/homepage': (_) => MapActivity(),
       },
       initialRoute: '/myApp',
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (BuildContext context) =>
+              Scaffold(body: Center(child: Text('Not Found'))),
+        );
+      },
     ),
   );
 }
@@ -138,12 +158,15 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
+    //*terminated state
     FirebaseMessaging.instance.getInitialMessage().then((value) {
       if (value != null) {
         final message = value.data["route"];
 
         print(message);
-        Navigator.of(context).pushNamed("/homepage");
+        Navigator.popUntil(context, (route) => route is PageRoute);
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MapActivity()));
       } else {
         print("not showing");
       }
@@ -153,6 +176,7 @@ class _MyAppState extends State<MyApp> {
       final routeMessage = message.data["route"];
       print("onMessageOpenedApp: $routeMessage");
 
+      Navigator.popUntil(context, (route) => route is PageRoute);
       Navigator.push(
         context,
         MaterialPageRoute(

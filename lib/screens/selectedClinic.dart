@@ -1,10 +1,12 @@
 import 'dart:collection';
+import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
-import 'package:clinique/screens/route.dart';
+import 'package:clinique/screens/showRoute.dart';
 import 'package:clinique/widgets/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:gradient_widgets/gradient_widgets.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,11 +14,11 @@ import 'package:firebase_database/firebase_database.dart';
 
 var _count = 0;
 
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1)}";
-  }
-}
+// extension StringExtension on String {
+//   String capitalize() {
+//     return "${this[0].toUpperCase()}${this.substring(1)}";
+//   }
+// }
 
 FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -32,6 +34,8 @@ class SelectedClinic extends StatefulWidget {
 class _SelectedClinicState extends State<SelectedClinic> {
   var uid;
   var ref;
+
+  MainController mainController = Get.find<MainController>();
 
   @override
   void initState() {
@@ -127,7 +131,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
           backgroundColor: Color(0xff8A1818),
           title: Center(
             child: Text(
-              widget.modelDoctorInfo.clinicName.capitalize() + " queue",
+              widget.modelDoctorInfo.clinicName.capitalize + " queue",
               style: TextStyle(color: Colors.white, letterSpacing: 1.2),
             ),
           ),
@@ -145,7 +149,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                             widget.modelDoctorInfo.img,
                             widget.modelDoctorInfo.clinicName,
                             widget.modelDoctorInfo.address,
-                            widget.modelDoctorInfo.doctorName.capitalize(),
+                            widget.modelDoctorInfo.doctorName.capitalize,
                             widget.modelDoctorInfo.eveningTime,
                             widget.modelDoctorInfo.fees,
                             widget.modelDoctorInfo.morningTime,
@@ -258,7 +262,9 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                       }
 
                                       return Text(
-                                        "${_count * 5} min",
+                                        (_count == 0)
+                                            ? "${(_count)} min"
+                                            : "${(_count - 1) * 5} min",
                                         style: TextStyle(
                                           fontSize: 20,
                                           color: Color(0xff8A1818),
@@ -353,6 +359,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                   String name;
                   ref.child("userinfo").once().then((DataSnapshot snapshot) {
                     name = snapshot.value['$uid']['name'];
+                    print(name);
                     _firestore
                         .collection('queue')
                         .doc('${widget.modelDoctorInfo.docId}')
@@ -361,11 +368,12 @@ class _SelectedClinicState extends State<SelectedClinic> {
                         .get()
                         .then((value) {
                       if (value.exists) {
+                        print("true");
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                Routing(widget.modelDoctorInfo, name),
+                                ShowRouting(widget.modelDoctorInfo, name),
                           ),
                         );
                       } else {
@@ -377,7 +385,10 @@ class _SelectedClinicState extends State<SelectedClinic> {
                             .set({
                           'name': name,
                           'time': DateTime.now().millisecondsSinceEpoch,
-                        }).then((value) {});
+                          'token': mainController.token.value
+                        }).then((value) {
+                          print("added");
+                        });
 
                         _firestore
                             .collection('queue')
@@ -393,7 +404,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    Routing(widget.modelDoctorInfo, name),
+                                    ShowRouting(widget.modelDoctorInfo, name),
                               ),
                             );
                           });
