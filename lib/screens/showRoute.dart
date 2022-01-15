@@ -4,6 +4,7 @@ import 'package:clinique/model/direction_model.dart';
 import 'package:clinique/direction_repository.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:flutter/material.dart';
+import 'package:styled_widget/styled_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,6 +34,7 @@ class _RouteState extends State<ShowRouting> {
   final Set<Polyline> _polyline = {};
   CameraPosition _cameraPosition;
   Directions _info;
+  bool isLoading = true;
 
   _onMapCreated(GoogleMapController controller) async {
     _myController = controller;
@@ -107,6 +109,10 @@ class _RouteState extends State<ShowRouting> {
               .toList(),
         ),
       );
+
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -175,112 +181,124 @@ class _RouteState extends State<ShowRouting> {
             },
           ),
         ),
-        body: Column(
+        body: Stack(
           children: [
-            Container(
-              height: MediaQuery.of(context).size.height - 120,
-              width: MediaQuery.of(context).size.width,
-              child: Stack(
-                fit: StackFit.expand,
-                alignment: Alignment.center,
-                children: [
-                  GoogleMap(
-                    polylines: _polyline,
-                    onMapCreated: _onMapCreated,
-                    markers: Set<Marker>.of(markers.values),
-                    initialCameraPosition: _cameraPosition == null
-                        ? CameraPosition(target: LatLng(20.5937, 78.9629))
-                        : _cameraPosition,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: FloatingActionButton(
-                        onPressed: () async {
-                          _myController.animateCamera(
-                              CameraUpdate.newLatLngZoom(
-                                  await _findCurrentLocation(), 16));
-                        },
-                        materialTapTargetSize: MaterialTapTargetSize.padded,
-                        backgroundColor: Colors.green,
-                        child: const Icon(Icons.add_location, size: 30.0),
+            Column(
+              children: [
+                Container(
+                  height: MediaQuery.of(context).size.height - 120,
+                  width: MediaQuery.of(context).size.width,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    alignment: Alignment.center,
+                    children: [
+                      GoogleMap(
+                        polylines: _polyline,
+                        onMapCreated: _onMapCreated,
+                        markers: Set<Marker>.of(markers.values),
+                        initialCameraPosition: _cameraPosition == null
+                            ? CameraPosition(target: LatLng(20.5937, 78.9629))
+                            : _cameraPosition,
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 5,
-                    child: Container(
-                      alignment: Alignment.center,
-                      width: MediaQuery.of(context).size.width - 10,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${_info?.totalDistance} ( ${_info?.totalDuration} )',
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 18),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  primary: Colors.red,
-                                  textStyle: const TextStyle(fontSize: 18),
-                                  elevation: 2,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12)),
-                              onPressed: () {
-                                _firestore
-                                    .collection('queue')
-                                    .doc('${widget.modelDoctorInfo.docId}')
-                                    .collection('queue')
-                                    .orderBy('time')
-                                    .get()
-                                    .then((value) {
-                                  var elem = value.docs.first;
-                                  // print(elem.data());
-                                  elem.reference.delete().then((value) {
+                      Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: FloatingActionButton(
+                            onPressed: () async {
+                              _myController.animateCamera(
+                                  CameraUpdate.newLatLngZoom(
+                                      await _findCurrentLocation(), 16));
+                            },
+                            materialTapTargetSize: MaterialTapTargetSize.padded,
+                            backgroundColor: Colors.green,
+                            child: const Icon(Icons.add_location, size: 30.0),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 5,
+                        child: Container(
+                          alignment: Alignment.center,
+                          width: MediaQuery.of(context).size.width - 10,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${_info?.totalDistance} ( ${_info?.totalDuration} )',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      primary: Colors.red,
+                                      textStyle: const TextStyle(fontSize: 18),
+                                      elevation: 2,
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 12)),
+                                  onPressed: () {
                                     _firestore
                                         .collection('queue')
                                         .doc('${widget.modelDoctorInfo.docId}')
+                                        .collection('queue')
+                                        .orderBy('time')
                                         .get()
                                         .then((value) {
-                                      var count = value["count"];
+                                      var elem = value.docs.first;
+                                      // print(elem.data());
+                                      elem.reference.delete().then((value) {
+                                        _firestore
+                                            .collection('queue')
+                                            .doc(
+                                                '${widget.modelDoctorInfo.docId}')
+                                            .get()
+                                            .then((value) {
+                                          var count = value["count"];
 
-                                      _firestore
-                                          .collection('queue')
-                                          .doc(
-                                              '${widget.modelDoctorInfo.docId}')
-                                          .update({'count': --count}).then(
-                                              (value) {
-                                        Navigator.pop(context);
+                                          _firestore
+                                              .collection('queue')
+                                              .doc(
+                                                  '${widget.modelDoctorInfo.docId}')
+                                              .update({'count': --count}).then(
+                                                  (value) {
+                                            Navigator.pop(context);
+                                          });
+                                        });
                                       });
                                     });
-                                  });
-                                });
-                              },
-                              child: Text(
-                                'LEAVE QUEUE',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 16),
-                              ),
+                                  },
+                                  child: Text(
+                                    'LEAVE QUEUE',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 16),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            )
+                )
+              ],
+            ),
+            (isLoading)
+                ? Positioned.fill(
+                    child: const CircularProgressIndicator().center().decorated(
+                          color: Colors.black12.withAlpha(20),
+                        ),
+                  )
+                : SizedBox()
           ],
         ),
       ),

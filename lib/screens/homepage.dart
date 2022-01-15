@@ -1,8 +1,10 @@
+import 'package:clinique/controller/homepage.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/selectedClinic.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:styled_widget/styled_widget.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,167 +20,161 @@ class MapActivity extends StatefulWidget {
 }
 
 class _MapActivityState extends State<MapActivity> {
-  GoogleMapController _myController;
+  GoogleMapController myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   CameraPosition _cameraPosition;
   final databaseRef = FirebaseDatabase.instance.reference();
+  final HomePageController homePageController = Get.put(HomePageController());
 
-  static List<ModelDoctorInfo> list = [];
-  static List<ModelDoctorInfo> listNew = [];
+  // _onMapCreated(GoogleMapController controller) async {
+  //   _myController = controller;
 
-  _onMapCreated(GoogleMapController controller) async {
-    _myController = controller;
+  //   Position position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.best);
+  //   _center = LatLng(position.latitude, position.longitude);
+  //   _cameraPosition = CameraPosition(target: _center, zoom: 15.0);
 
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best);
-    _center = LatLng(position.latitude, position.longitude);
-    _cameraPosition = CameraPosition(target: _center, zoom: 15.0);
+  //   markers[MarkerId('id-1')] = Marker(
+  //     position: _center,
+  //     markerId: MarkerId('id-1'),
+  //     icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+  //   );
 
-    markers[MarkerId('id-1')] = Marker(
-      position: _center,
-      markerId: MarkerId('id-1'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-    );
+  //   homePageController
+  //       .printFirebase()
+  //       .then((value) => homePageController.getList());
 
-    printFirebase();
+  //   _myController.animateCamera(
+  //     CameraUpdate.newLatLngZoom(_center, 15),
+  //   );
+  // }
 
-    getList();
+  // printFirebase() {
+  //   databaseRef
+  //       .child("doctorInfo")
+  //       .child('clinicInfo')
+  //       .once()
+  //       .then((DataSnapshot snapshot) {
+  //     var databaseRefIndi = snapshot.value;
+  //     LatLng pos;
+  //     var count = 1;
+  //     var lat;
+  //     var long;
+  //     databaseRefIndi.forEach((key, value) {
+  //       Map<dynamic, dynamic> info = snapshot.value;
+  //       databaseRef
+  //           .child("doctorInfo")
+  //           .child("clinicInfo")
+  //           .child(key.toString())
+  //           .once()
+  //           .then((DataSnapshot snapshot) {
+  //         info = snapshot.value;
+  //         info.forEach((key, value) {
+  //           if (key == "latitude") {
+  //             lat = value;
+  //           } else if (key == "longitude") {
+  //             long = value;
+  //           }
+  //         });
 
-    _myController.animateCamera(
-      CameraUpdate.newLatLngZoom(_center, 15),
-    );
-  }
+  //         pos = LatLng(lat, long);
 
-  printFirebase() {
-    databaseRef
-        .child("doctorInfo")
-        .child('clinicInfo')
-        .once()
-        .then((DataSnapshot snapshot) {
-      Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
-      LatLng pos;
-      var count = 1;
-      var lat;
-      var long;
-      databaseRefIndi.forEach((key, value) {
-        Map<dynamic, dynamic> info = snapshot.value;
-        databaseRef
-            .child("doctorInfo")
-            .child("clinicInfo")
-            .child(key.toString())
-            .once()
-            .then((DataSnapshot snapshot) {
-          info = snapshot.value;
-          info.forEach((key, value) {
-            if (key == "latitude") {
-              lat = value;
-            } else if (key == "longitude") {
-              long = value;
-            }
-          });
+  //         count++;
 
-          pos = LatLng(lat, long);
+  //         final distance = Geolocator.distanceBetween(
+  //             _center.latitude, _center.longitude, pos.latitude, pos.longitude);
 
-          count++;
+  //         if (distance < 2000) {
+  //           final markerId = MarkerId('id-$count');
+  //           markers[markerId] = Marker(
+  //             markerId: markerId,
+  //             position: pos,
+  //             icon: BitmapDescriptor.defaultMarker,
+  //             onTap: () {
+  //               final Marker tappedMarker = markers[markerId];
 
-          final distance = Geolocator.distanceBetween(
-              _center.latitude, _center.longitude, pos.latitude, pos.longitude);
+  //               if (tappedMarker != null) {
+  //                 listNew.clear();
 
-          if (distance < 2000) {
-            final markerId = MarkerId('id-$count');
-            markers[markerId] = Marker(
-              markerId: markerId,
-              position: pos,
-              icon: BitmapDescriptor.defaultMarker,
-              onTap: () {
-                final Marker tappedMarker = markers[markerId];
+  //                 list.forEach((element) {
+  //                   if (element.latitude.toStringAsPrecision(7) ==
+  //                           tappedMarker.position.latitude
+  //                               .toStringAsPrecision(7) &&
+  //                       element.longitude.toStringAsPrecision(7) ==
+  //                           tappedMarker.position.longitude
+  //                               .toStringAsPrecision(7)) {
+  //                     setState(() {
+  //                       listNew.add(element);
+  //                     });
+  //                   }
+  //                 });
+  //               } else {
+  //                 print("Tapped marker is NULL..");
+  //               }
+  //             },
+  //           );
+  //         }
+  //       });
+  //     });
+  //   });
+  // }
 
-                if (tappedMarker != null) {
-                  listNew.clear();
+  // getList() {
+  //   databaseRef
+  //       .child("doctorInfo")
+  //       .child("clinicInfo")
+  //       .get()
+  //       .then((DataSnapshot snapshot) {
+  //     Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
+  //     databaseRefIndi.forEach((key, value) {
+  //       final distance = Geolocator.distanceBetween(_center.latitude,
+  //           _center.longitude, value["latitude"], value["longitude"]);
 
-                  list.forEach((element) {
-                    if (element.latitude.toStringAsPrecision(7) ==
-                            tappedMarker.position.latitude
-                                .toStringAsPrecision(7) &&
-                        element.longitude.toStringAsPrecision(7) ==
-                            tappedMarker.position.longitude
-                                .toStringAsPrecision(7)) {
-                      setState(() {
-                        listNew.add(element);
-                      });
-                    }
-                  });
-                } else {
-                  print("Tapped marker is NULL..");
-                }
-              },
-            );
-          }
-        });
-      });
-    });
-  }
+  //       if (distance < 2000) {
+  //         ModelDoctorInfo modelDoctorInfo;
 
-  getList() {
-    list.clear();
-    listNew.clear();
-    databaseRef
-        .child("doctorInfo")
-        .child("clinicInfo")
-        .get()
-        .then((DataSnapshot snapshot) {
-      Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
-      databaseRefIndi.forEach((key, value) {
-        final distance = Geolocator.distanceBetween(_center.latitude,
-            _center.longitude, value["latitude"], value["longitude"]);
-
-        if (distance < 2000) {
-          ModelDoctorInfo modelDoctorInfo;
-
-          FirebaseStorage.instance
-              .ref()
-              .child(value["img"])
-              .getDownloadURL()
-              .then((url) async {
-            var count = 0;
-            _firestore.collection('queue').snapshots().forEach((element) async {
-              final snap = element.docs;
-              for (var sn in snap) {
-                if (sn.id.toString() == key.toString()) {
-                  count = await sn.get('count');
-                  print("here $count");
-                  print("here ${value["clinicName"]}");
-                  modelDoctorInfo = new ModelDoctorInfo(
-                      url,
-                      value["clinicName"],
-                      value["address"],
-                      value["name"],
-                      value["evening time"],
-                      value["fees"],
-                      value["morning time"],
-                      value["specialization"],
-                      value["latitude"],
-                      value["longitude"],
-                      distance,
-                      value["review"],
-                      key,
-                      count.toString());
-                }
-              }
-              setState(() {
-                list.add(modelDoctorInfo);
-              });
-            });
-          });
-        }
-      });
-    });
-  }
+  //         FirebaseStorage.instance
+  //             .ref()
+  //             .child(value["img"])
+  //             .getDownloadURL()
+  //             .then((url) async {
+  //           var count = 0;
+  //           _firestore.collection('queue').snapshots().forEach((element) async {
+  //             final snap = element.docs;
+  //             for (var sn in snap) {
+  //               if (sn.id.toString() == key.toString()) {
+  //                 count = await sn.get('count');
+  //                 print("here $count");
+  //                 print("here ${value["clinicName"]}");
+  //                 modelDoctorInfo = new ModelDoctorInfo(
+  //                     url,
+  //                     value["clinicName"],
+  //                     value["address"],
+  //                     value["name"],
+  //                     value["evening time"],
+  //                     value["fees"],
+  //                     value["morning time"],
+  //                     value["specialization"],
+  //                     value["latitude"],
+  //                     value["longitude"],
+  //                     distance,
+  //                     value["review"],
+  //                     key,
+  //                     count.toString());
+  //               }
+  //             }
+  //             setState(() {
+  //               list.add(modelDoctorInfo);
+  //             });
+  //           });
+  //         });
+  //       }
+  //     });
+  //   });
+  // }
 
   @override
   void initState() {
-    list.clear();
-    listNew.clear();
     super.initState();
   }
 
@@ -216,47 +212,55 @@ class _MapActivityState extends State<MapActivity> {
       ModelDoctorInfo modelDoctorInfo;
       return GestureDetector(
         onTap: () {
-          if (listNew.length != 0) {
+          print("index is => ${index}");
+
+          if (homePageController.listNew.length != 0) {
+            var item = homePageController.listNew[index];
             modelDoctorInfo = new ModelDoctorInfo(
-                listNew[index].img,
-                listNew[index].clinicName,
-                listNew[index].address,
-                listNew[index].doctorName,
-                listNew[index].eveningTime,
-                listNew[index].fees,
-                listNew[index].morningTime,
-                listNew[index].specialization,
-                listNew[index].latitude,
-                listNew[index].longitude,
-                listNew[index].distance,
-                listNew[index].review,
+                item.img,
+                item.clinicName,
+                item.address,
+                item.doctorName,
+                item.eveningTime,
+                item.fees,
+                item.morningTime,
+                item.specialization,
+                item.latitude,
+                item.longitude,
+                item.distance,
+                item.review,
                 docId,
-                listNew[index].count);
+                item.count);
             Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => SelectedClinic(modelDoctorInfo)));
           } else {
+            var item = homePageController.list[index];
             modelDoctorInfo = new ModelDoctorInfo(
-                list[index].img,
-                list[index].clinicName,
-                list[index].address,
-                list[index].doctorName,
-                list[index].eveningTime,
-                list[index].fees,
-                list[index].morningTime,
-                list[index].specialization,
-                list[index].latitude,
-                list[index].longitude,
-                list[index].distance,
-                list[index].review,
+                item.img,
+                item.clinicName,
+                item.address,
+                item.doctorName,
+                item.eveningTime,
+                item.fees,
+                item.morningTime,
+                item.specialization,
+                item.latitude,
+                item.longitude,
+                item.distance,
+                item.review,
                 docId,
-                list[index].count);
+                item.count);
             Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => SelectedClinic(modelDoctorInfo)));
           }
+        },
+        onLongPress: () {
+          print("Long pressed tapped");
+          homePageController.changeCamera(LatLng(latitude, longitude));
         },
         child: Container(
           width: 270,
@@ -402,299 +406,344 @@ class _MapActivityState extends State<MapActivity> {
       );
     }
 
-    _handleTap(LatLng tappedPoint) {
-      listNew.clear();
+    // _handleTap(LatLng tappedPoint) {
+    //   listNew.clear();
 
-      setState(() {
-        list.forEach((element) {
-          if (element.latitude == tappedPoint.latitude &&
-              element.longitude.toString() ==
-                  tappedPoint.longitude.toStringAsPrecision(8)) {
-            listNew.add(element);
-          }
-        });
-      });
-    }
+    //   setState(() {
+    //     list.forEach((element) {
+    //       if (element.latitude == tappedPoint.latitude &&
+    //           element.longitude.toString() ==
+    //               tappedPoint.longitude.toStringAsPrecision(8)) {
+    //         listNew.add(element);
+    //       }
+    //     });
+    //   });
+    // }
 
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.only(top: 10),
-                width: MediaQuery.of(context).size.width - 20,
-                height: 50,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        height: 40,
-                        child: TextField(
-                          cursorColor: Color(0xFF9B3D3D),
-                          onChanged: (v) {},
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(0xFFD99D9D),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color(
-                                  0xFFAA6262,
+          child: GetBuilder<HomePageController>(
+            init: HomePageController(),
+            builder: (controller) {
+              return Stack(
+                children: [
+                  Column(
+                    children: <Widget>[
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        width: MediaQuery.of(context).size.width - 20,
+                        height: 50,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Container(
+                                height: 40,
+                                child: TextField(
+                                  cursorColor: Color(0xFF9B3D3D),
+                                  onChanged: (v) {},
+                                  textAlignVertical: TextAlignVertical.center,
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 10, horizontal: 15),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFFD99D9D),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: Color(
+                                          0xFFAA6262,
+                                        ),
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(),
+                                    hintText: 'Enter Address / Name',
+                                  ),
                                 ),
                               ),
                             ),
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter Address / Name',
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 5, horizontal: 30),
-                        textStyle: const TextStyle(fontSize: 18),
-                        elevation: 5,
-                        primary: Color(0xFF9B3D3D),
-                      ),
-                      onPressed: () {},
-                      child: Text("Enter"),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                alignment: Alignment.center,
-                width: MediaQuery.of(context).size.width - 20,
-                height: 50,
-                margin: EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      'Sort List By :',
-                      style: TextStyle(
-                        color: Color(0xff8A1818),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    DropdownButton<String>(
-                      value: dropdownValue,
-                      icon: const Icon(Icons.arrow_downward),
-                      iconSize: 24,
-                      elevation: 16,
-                      style: const TextStyle(color: Colors.black),
-                      dropdownColor: Colors.white,
-                      underline: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.black,
-                              width: 8,
+                            SizedBox(
+                              width: 20,
                             ),
-                            color: Colors.black,
-                          ),
-                          height: 2),
-                      onChanged: (String newValue) {
-                        setState(() {
-                          dropdownValue = newValue;
-                        });
-                      },
-                      items: <String>['Distance', 'Review', 'Fees', 'Patients']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Color(0xff9D9D9D),
-                        ),
-                        textStyle: MaterialStateProperty.all(
-                          TextStyle(color: Colors.white),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 30),
+                                textStyle: const TextStyle(fontSize: 18),
+                                elevation: 5,
+                                primary: Color(0xFF9B3D3D),
+                              ),
+                              onPressed: () {},
+                              child: Text("Enter"),
+                            ),
+                          ],
                         ),
                       ),
-                      onPressed: () {
-                        listNew.clear();
-                        if (dropdownValue == "Distance") {
-                          setState(() {
-                            list.sort(
-                              (a, b) => a.distance.compareTo(b.distance),
-                            );
-                          });
-                        } else if (dropdownValue == "Review") {
-                          setState(() {
-                            list.sort((a, b) => a.review.compareTo(b.review));
-                          });
-                        } else if (dropdownValue == "Fees") {
-                          setState(() {
-                            list.sort((a, b) =>
-                                int.parse(a.fees).compareTo(int.parse(b.fees)));
-                          });
-                        } else {
-                          setState(() {
-                            list.sort((a, b) => int.parse(a.count)
-                                .compareTo(int.parse(b.count)));
-                          });
-                        }
-                      },
-                      child: Text(
-                        'Low-High',
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(
-                            Color(0xff9D9D9D),
-                          ),
-                          textStyle: MaterialStateProperty.all(
-                              TextStyle(color: Colors.white))),
-                      onPressed: () {
-                        listNew.clear();
-                        if (dropdownValue == "Distance") {
-                          setState(() {
-                            list.sort(
-                                (a, b) => b.distance.compareTo(a.distance));
-                          });
-                        } else if (dropdownValue == "Review") {
-                          setState(() {
-                            list.sort((a, b) => b.review.compareTo(a.review));
-                          });
-                        } else if (dropdownValue == "Fees") {
-                          setState(() {
-                            list.sort((a, b) =>
-                                int.parse(b.fees).compareTo(int.parse(a.fees)));
-                          });
-                        } else {
-                          setState(() {
-                            list.sort((a, b) => int.parse(b.count)
-                                .compareTo(int.parse(a.count)));
-                          });
-                        }
-                      },
-                      child: Text(
-                        'High-Low',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                height: MediaQuery.of(context).size.height - 170,
-                width: MediaQuery.of(context).size.width,
-                child: Stack(
-                  children: [
-                    GoogleMap(
-                      onMapCreated: _onMapCreated,
-                      markers: Set<Marker>.of(markers.values),
-                      onTap: _handleTap,
-                      initialCameraPosition: _cameraPosition == null
-                          ? CameraPosition(
-                              target: LatLng(20.5937, 78.9629), zoom: 15)
-                          : _cameraPosition,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Align(
-                        alignment: Alignment.topRight,
-                        child: FloatingActionButton(
-                          onPressed: () async {
-                            _myController.animateCamera(
-                                CameraUpdate.newLatLngZoom(_center, 15));
-                          },
-                          materialTapTargetSize: MaterialTapTargetSize.padded,
-                          backgroundColor: Colors.green,
-                          child: const Icon(Icons.add_location, size: 30.0),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: new Container(
-                        height: 170,
-                        child: listNew.length != 0
-                            ? new ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemBuilder: (_, index) {
-                                  print("here");
-                                  return ui(
-                                      index,
-                                      listNew[index].img,
-                                      listNew[index].clinicName,
-                                      listNew[index].address,
-                                      listNew[index].doctorName,
-                                      listNew[index].eveningTime,
-                                      listNew[index].fees,
-                                      listNew[index].morningTime,
-                                      listNew[index].specialization,
-                                      listNew[index].latitude,
-                                      listNew[index].longitude,
-                                      listNew[index].review,
-                                      listNew[index].distance,
-                                      listNew[index].docId,
-                                      listNew[index].count);
-                                },
-                                itemCount: listNew.length,
-                              )
-                            : list == null
-                                ? CircularProgressIndicator()
-                                : new ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemBuilder: (_, index) {
-                                      print(index);
-                                      return ui(
-                                          index,
-                                          list[index].img,
-                                          list[index].clinicName,
-                                          list[index].address,
-                                          list[index].doctorName,
-                                          list[index].eveningTime,
-                                          list[index].fees,
-                                          list[index].morningTime,
-                                          list[index].specialization,
-                                          list[index].latitude,
-                                          list[index].longitude,
-                                          list[index].review,
-                                          list[index].distance,
-                                          list[index].docId,
-                                          list[index].count);
-                                    },
-                                    itemCount: list.length,
+                      Container(
+                        alignment: Alignment.center,
+                        width: MediaQuery.of(context).size.width - 20,
+                        height: 50,
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text(
+                              'Sort List By :',
+                              style: TextStyle(
+                                color: Color(0xff8A1818),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            DropdownButton<String>(
+                              value: dropdownValue,
+                              icon: const Icon(Icons.arrow_downward),
+                              iconSize: 24,
+                              elevation: 16,
+                              style: const TextStyle(color: Colors.black),
+                              dropdownColor: Colors.white,
+                              underline: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 8,
+                                    ),
+                                    color: Colors.black,
                                   ),
+                                  height: 2),
+                              onChanged: (String newValue) {
+                                setState(() {
+                                  dropdownValue = newValue;
+                                });
+                              },
+                              items: <String>[
+                                'Distance',
+                                'Review',
+                                'Fees',
+                                'Patients'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                  Color(0xff9D9D9D),
+                                ),
+                                textStyle: MaterialStateProperty.all(
+                                  TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              onPressed: () {
+                                homePageController.listNew.clear();
+                                if (dropdownValue == "Distance") {
+                                  setState(() {
+                                    homePageController.list.sort(
+                                      (a, b) =>
+                                          a.distance.compareTo(b.distance),
+                                    );
+                                  });
+                                } else if (dropdownValue == "Review") {
+                                  setState(() {
+                                    homePageController.list.sort(
+                                        (a, b) => a.review.compareTo(b.review));
+                                  });
+                                } else if (dropdownValue == "Fees") {
+                                  setState(() {
+                                    homePageController.list.sort((a, b) =>
+                                        int.parse(a.fees)
+                                            .compareTo(int.parse(b.fees)));
+                                  });
+                                } else {
+                                  setState(() {
+                                    homePageController.list.sort((a, b) =>
+                                        int.parse(a.count)
+                                            .compareTo(int.parse(b.count)));
+                                  });
+                                }
+                              },
+                              child: Text(
+                                'Low-High',
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            ElevatedButton(
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(
+                                    Color(0xff9D9D9D),
+                                  ),
+                                  textStyle: MaterialStateProperty.all(
+                                      TextStyle(color: Colors.white))),
+                              onPressed: () {
+                                homePageController.listNew.clear();
+                                if (dropdownValue == "Distance") {
+                                  setState(() {
+                                    homePageController.list.sort((a, b) =>
+                                        b.distance.compareTo(a.distance));
+                                  });
+                                } else if (dropdownValue == "Review") {
+                                  setState(() {
+                                    homePageController.list.sort(
+                                        (a, b) => b.review.compareTo(a.review));
+                                  });
+                                } else if (dropdownValue == "Fees") {
+                                  setState(() {
+                                    homePageController.list.sort((a, b) =>
+                                        int.parse(b.fees)
+                                            .compareTo(int.parse(a.fees)));
+                                  });
+                                } else {
+                                  setState(() {
+                                    homePageController.list.sort((a, b) =>
+                                        int.parse(b.count)
+                                            .compareTo(int.parse(a.count)));
+                                  });
+                                }
+                              },
+                              child: Text(
+                                'High-Low',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                      Container(
+                        height: MediaQuery.of(context).size.height - 170,
+                        width: MediaQuery.of(context).size.width,
+                        child: Stack(
+                          children: [
+                            Obx(() => GoogleMap(
+                                  onMapCreated: controller.onMapCreated,
+                                  markers:
+                                      Set<Marker>.of(controller.markers.values),
+                                  onTap: controller.handleTap,
+                                  initialCameraPosition:
+                                      controller.getCameraPosition,
+                                )),
+                            Padding(
+                              padding: const EdgeInsets.all(14.0),
+                              child: Align(
+                                alignment: Alignment.topRight,
+                                child: FloatingActionButton(
+                                  onPressed: () async {
+                                    controller.myController.animateCamera(
+                                        CameraUpdate.newLatLngZoom(
+                                            controller.getCenter, 15));
+                                  },
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.padded,
+                                  backgroundColor: Colors.green,
+                                  child: const Icon(Icons.add_location,
+                                      size: 30.0),
+                                ),
+                              ),
+                            ),
+                            Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Obx(() {
+                                  print(controller.list.length);
+                                  print(controller.listNew.length);
+                                  return Container(
+                                      height: 170,
+                                      child: controller.listNew.length != 0
+                                          ? Obx(() {
+                                              return ListView.builder(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemBuilder: (_, index) {
+                                                  print("here");
+                                                  var item =
+                                                      controller.listNew[index];
+                                                  return ui(
+                                                      index,
+                                                      item.img,
+                                                      item.clinicName,
+                                                      item.address,
+                                                      item.doctorName,
+                                                      item.eveningTime,
+                                                      item.fees,
+                                                      item.morningTime,
+                                                      item.specialization,
+                                                      item.latitude,
+                                                      item.longitude,
+                                                      item.review,
+                                                      item.distance,
+                                                      item.docId,
+                                                      item.count);
+                                                },
+                                                itemCount:
+                                                    controller.listNew.length,
+                                              );
+                                            })
+                                          : controller.list == null
+                                              ? CircularProgressIndicator()
+                                              : Obx(() {
+                                                  return ListView.builder(
+                                                    scrollDirection:
+                                                        Axis.horizontal,
+                                                    itemBuilder: (_, index) {
+                                                      print(index);
+                                                      var item = controller
+                                                          .list[index];
+                                                      return ui(
+                                                          index,
+                                                          item.img,
+                                                          item.clinicName,
+                                                          item.address,
+                                                          item.doctorName,
+                                                          item.eveningTime,
+                                                          item.fees,
+                                                          item.morningTime,
+                                                          item.specialization,
+                                                          item.latitude,
+                                                          item.longitude,
+                                                          item.review,
+                                                          item.distance,
+                                                          item.docId,
+                                                          item.count);
+                                                    },
+                                                    itemCount:
+                                                        controller.list.length,
+                                                  );
+                                                }));
+                                })),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Obx(() => controller.isListLoading
+                      ? Positioned.fill(
+                          child: const CircularProgressIndicator()
+                              .center()
+                              .decorated(
+                                color: Colors.black12.withAlpha(20),
+                              ),
+                        )
+                      : SizedBox()),
+                ],
+              );
+            },
           ),
         ),
       ),
