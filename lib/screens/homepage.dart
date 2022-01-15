@@ -288,7 +288,16 @@ class _MapActivityState extends State<MapActivity> {
                                 height: 40,
                                 child: TextField(
                                   cursorColor: Color(0xFF9B3D3D),
-                                  onChanged: (v) {},
+                                  onChanged: (v) {
+                                    controller.filteredList = controller.list
+                                        .where((element) => (element.address
+                                                .toLowerCase()
+                                                .contains(v.toLowerCase()) ||
+                                            element.clinicName
+                                                .toLowerCase()
+                                                .contains(v.toLowerCase())))
+                                        .toList();
+                                  },
                                   textAlignVertical: TextAlignVertical.center,
                                   decoration: InputDecoration(
                                     contentPadding: EdgeInsets.symmetric(
@@ -510,46 +519,19 @@ class _MapActivityState extends State<MapActivity> {
                                   print(controller.listNew.length);
                                   return Container(
                                       height: 170,
-                                      child: controller.listNew.length != 0
-                                          ? Obx(() {
-                                              return ListView.builder(
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemBuilder: (_, index) {
-                                                  print("here");
-                                                  var item =
-                                                      controller.listNew[index];
-                                                  return ui(
-                                                      index,
-                                                      item.img,
-                                                      item.clinicName,
-                                                      item.address,
-                                                      item.doctorName,
-                                                      item.eveningTime,
-                                                      item.fees,
-                                                      item.morningTime,
-                                                      item.specialization,
-                                                      item.latitude,
-                                                      item.longitude,
-                                                      item.review,
-                                                      item.distance,
-                                                      item.docId,
-                                                      item.count);
-                                                },
-                                                itemCount:
-                                                    controller.listNew.length,
-                                              );
-                                            })
-                                          : controller.list == null
-                                              ? CircularProgressIndicator()
-                                              : Obx(() {
+                                      child: (controller.filteredList.length ==
+                                                  controller.list.length ||
+                                              controller.filteredList.length ==
+                                                  controller.listNew.length)
+                                          ? controller.listNew.length != 0
+                                              ? Obx(() {
                                                   return ListView.builder(
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     itemBuilder: (_, index) {
-                                                      print(index);
+                                                      print("here");
                                                       var item = controller
-                                                          .list[index];
+                                                          .listNew[index];
                                                       return ui(
                                                           index,
                                                           item.img,
@@ -567,10 +549,69 @@ class _MapActivityState extends State<MapActivity> {
                                                           item.docId,
                                                           item.count);
                                                     },
-                                                    itemCount:
-                                                        controller.list.length,
+                                                    itemCount: controller
+                                                        .listNew.length,
                                                   );
-                                                }));
+                                                })
+                                              : controller.list == null
+                                                  ? CircularProgressIndicator()
+                                                  : Obx(() {
+                                                      return ListView.builder(
+                                                        scrollDirection:
+                                                            Axis.horizontal,
+                                                        itemBuilder:
+                                                            (_, index) {
+                                                          print(index);
+                                                          var item = controller
+                                                              .list[index];
+                                                          return ui(
+                                                              index,
+                                                              item.img,
+                                                              item.clinicName,
+                                                              item.address,
+                                                              item.doctorName,
+                                                              item.eveningTime,
+                                                              item.fees,
+                                                              item.morningTime,
+                                                              item.specialization,
+                                                              item.latitude,
+                                                              item.longitude,
+                                                              item.review,
+                                                              item.distance,
+                                                              item.docId,
+                                                              item.count);
+                                                        },
+                                                        itemCount: controller
+                                                            .list.length,
+                                                      );
+                                                    })
+                                          : Obx(() => ListView.builder(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemBuilder: (_, index) {
+                                                  print(index);
+                                                  var item = controller
+                                                      .filteredList[index];
+                                                  return ui(
+                                                      index,
+                                                      item.img,
+                                                      item.clinicName,
+                                                      item.address,
+                                                      item.doctorName,
+                                                      item.eveningTime,
+                                                      item.fees,
+                                                      item.morningTime,
+                                                      item.specialization,
+                                                      item.latitude,
+                                                      item.longitude,
+                                                      item.review,
+                                                      item.distance,
+                                                      item.docId,
+                                                      item.count);
+                                                },
+                                                itemCount: controller
+                                                    .filteredList.length,
+                                              )));
                                 })),
                           ],
                         ),

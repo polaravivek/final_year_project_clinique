@@ -15,6 +15,7 @@ class HomePageController extends GetxController {
   final loading = false.obs;
   final listLoading = false.obs;
   List<ModelDoctorInfo> list = <ModelDoctorInfo>[].obs;
+  List<ModelDoctorInfo> filteredList = <ModelDoctorInfo>[].obs;
   List<ModelDoctorInfo> listNew = <ModelDoctorInfo>[].obs;
   Rx<LatLng> center = LatLng(0, 0).obs;
 
@@ -187,7 +188,10 @@ class HomePageController extends GetxController {
         .get()
         .then((DataSnapshot snapshot) {
       Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
+
       databaseRefIndi.forEach((key, value) {
+        list.clear();
+        listNew.clear();
         final distance = Geolocator.distanceBetween(center.value.latitude,
             center.value.longitude, value["latitude"], value["longitude"]);
 
@@ -200,10 +204,10 @@ class HomePageController extends GetxController {
               .getDownloadURL()
               .then((url) async {
             var count = 0;
+
             _firestore.collection('queue').snapshots().forEach((element) async {
               print("here count");
-              list.clear();
-              listNew.clear();
+
               final snap = element.docs;
               for (var sn in snap) {
                 if (sn.id.toString() == key.toString()) {
