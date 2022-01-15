@@ -240,33 +240,28 @@ class _RouteState extends State<ShowRouting> {
                                     .collection('queue')
                                     .doc('${widget.modelDoctorInfo.docId}')
                                     .collection('queue')
-                                    .snapshots()
-                                    .forEach((element) {
-                                  element.docs.forEach((element) {
-                                    if (uid.toString() ==
-                                        element.id.toString()) {
-                                      element.reference.delete().then((value) {
-                                        _firestore
-                                            .collection('queue')
-                                            .doc(
-                                                '${widget.modelDoctorInfo.docId}')
-                                            .get()
-                                            .then((value) {
-                                          var count = value["count"];
+                                    .orderBy('time')
+                                    .get()
+                                    .then((value) {
+                                  var elem = value.docs.first;
+                                  // print(elem.data());
+                                  elem.reference.delete().then((value) {
+                                    _firestore
+                                        .collection('queue')
+                                        .doc('${widget.modelDoctorInfo.docId}')
+                                        .get()
+                                        .then((value) {
+                                      var count = value["count"];
 
-                                          _firestore
-                                              .collection('queue')
-                                              .doc(
-                                                  '${widget.modelDoctorInfo.docId}')
-                                              .update({'count': --count}).then(
-                                                  (value) {
-                                            Navigator.pop(context);
-                                          });
-                                        });
+                                      _firestore
+                                          .collection('queue')
+                                          .doc(
+                                              '${widget.modelDoctorInfo.docId}')
+                                          .update({'count': --count}).then(
+                                              (value) {
+                                        Navigator.pop(context);
                                       });
-                                    } else {
-                                      print("not found");
-                                    }
+                                    });
                                   });
                                 });
                               },

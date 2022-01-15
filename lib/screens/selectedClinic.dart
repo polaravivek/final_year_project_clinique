@@ -1,7 +1,9 @@
 import 'dart:collection';
 import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
-import 'package:clinique/screens/showRoute.dart';
+import 'package:clinique/screens/selected_clinic.controller.dart';
+// import 'package:clinique/screens/showRoute.dart';
+import 'package:styled_widget/styled_widget.dart';
 import 'package:clinique/widgets/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -136,299 +138,335 @@ class _SelectedClinicState extends State<SelectedClinic> {
             ),
           ),
         ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Column(
+        body: GetBuilder<SelectedClinicController>(
+            init: SelectedClinicController(),
+            builder: (controller) {
+              return Stack(
                 children: [
-                  Container(
-                    child: Column(
-                      children: [
-                        ui(
-                            widget.modelDoctorInfo.img,
-                            widget.modelDoctorInfo.clinicName,
-                            widget.modelDoctorInfo.address,
-                            widget.modelDoctorInfo.doctorName.capitalize,
-                            widget.modelDoctorInfo.eveningTime,
-                            widget.modelDoctorInfo.fees,
-                            widget.modelDoctorInfo.morningTime,
-                            widget.modelDoctorInfo.specialization,
-                            widget.modelDoctorInfo.latitude,
-                            widget.modelDoctorInfo.longitude,
-                            widget.modelDoctorInfo.review,
-                            widget.modelDoctorInfo.distance,
-                            widget.modelDoctorInfo.docId),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Card(
-                          color: Color(0xffFFA8A8),
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(12))),
-                          elevation: 4,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 20),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "PATIENT COUNT",
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Color(0xff8A1818),
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                StreamBuilder(
-                                    stream: _firestore
-                                        .collection('queue')
-                                        .snapshots(),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<QuerySnapshot> snapshot) {
-                                      if (!snapshot.hasData) {
-                                        return Text("loading....");
-                                      }
-                                      final snap = snapshot.data.docs;
-                                      var count = 0;
-                                      for (var sn in snap) {
-                                        if (sn.id ==
-                                            widget.modelDoctorInfo.docId) {
-                                          count = sn.get('count');
-                                        }
-                                      }
-                                      return Text(
-                                        "$count",
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            color: Color(0xff8A1818),
-                                            fontWeight: FontWeight.bold),
-                                      );
-                                    }),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Card(
-                          color: Color(0xffFFA8A8),
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(12))),
-                          elevation: 4,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 20),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "EXPECTED TIME",
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Color(0xff8A1818),
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                StreamBuilder(
-                                    stream: _firestore
-                                        .collection('queue')
-                                        .snapshots(),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<QuerySnapshot> snapshot) {
-                                      if (!snapshot.hasData) {
-                                        return Text("loading....");
-                                      }
-                                      final snap = snapshot.data.docs;
-
-                                      for (var sn in snap) {
-                                        if (sn.id ==
-                                            widget.modelDoctorInfo.docId) {
-                                          _count = sn.get('count');
-                                          break;
-                                        }
-                                      }
-
-                                      return Text(
-                                        (_count == 0)
-                                            ? "${(_count)} min"
-                                            : "${(_count - 1) * 5} min",
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          color: Color(0xff8A1818),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      );
-                                    }),
-                              ],
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      'ALL MEMBERS',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: Color(0xff8A1818),
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Container(
-                    height: 380,
-                    child: StreamBuilder(
-                      // here 2 change
-                      stream: _firestore
-                          .collection('queue')
-                          .doc('${widget.modelDoctorInfo.docId}')
-                          .collection('queue')
-                          .orderBy('time')
-                          .snapshots(), // here 1 change
-                      builder: (BuildContext context,
-                          AsyncSnapshot<QuerySnapshot> snapshot) {
-                        if (!snapshot.hasData) {
-                          return Lottie.asset('assets/lottie/queue.json',
-                              width: 300,
-                              height: 300,
-                              frameRate: FrameRate(30),
-                              repeat: true);
-                        }
-
-                        final snap = snapshot.data.docs;
-                        arr.clear();
-                        for (var sn in snap) {
-                          LinkedHashMap<String, dynamic> s = sn.data();
-                          var name = s['name'];
-                          arr.add(name);
-                        }
-
-                        if (arr.length == 0) {
-                          return queueMember("No member available", "",
-                              Colors.white, Colors.white, Colors.black);
-                        } else {
-                          return ListView.builder(
-                            scrollDirection: Axis.vertical,
-                            itemCount: arr.length,
-                            itemBuilder: (_, index) {
-                              if (index >= 3) {
-                                return queueMember(
-                                    "${arr[index]}",
-                                    "${index + 1}.",
-                                    Colors.white,
-                                    Colors.white,
-                                    Colors.black);
-                              } else {
-                                return queueMember(
-                                    "${arr[index]}",
-                                    "${index + 1}.",
-                                    Colors.green,
-                                    Colors.lightGreen,
-                                    Colors.white);
-                              }
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20),
-              width: double.infinity,
-              height: 70,
-              child: GestureDetector(
-                onTap: () {
-                  print("tapped");
-                  String name;
-                  ref.child("userinfo").once().then((DataSnapshot snapshot) {
-                    name = snapshot.value['$uid']['name'];
-                    print(name);
-                    _firestore
-                        .collection('queue')
-                        .doc('${widget.modelDoctorInfo.docId}')
-                        .collection('queue')
-                        .doc(uid)
-                        .get()
-                        .then((value) {
-                      if (value.exists) {
-                        print("true");
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ShowRouting(widget.modelDoctorInfo, name),
-                          ),
-                        );
-                      } else {
-                        _firestore
-                            .collection('queue')
-                            .doc('${widget.modelDoctorInfo.docId}')
-                            .collection('queue')
-                            .doc(uid)
-                            .set({
-                          'name': name,
-                          'time': DateTime.now().millisecondsSinceEpoch,
-                          'token': mainController.token.value
-                        }).then((value) {
-                          print("added");
-                        });
-
-                        _firestore
-                            .collection('queue')
-                            .doc('${widget.modelDoctorInfo.docId}')
-                            .get()
-                            .then((value) {
-                          var count = value["count"];
-                          _firestore
-                              .collection('queue')
-                              .doc('${widget.modelDoctorInfo.docId}')
-                              .update({'count': ++count}).then((value) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ShowRouting(widget.modelDoctorInfo, name),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        child: Column(
+                          children: [
+                            Container(
+                              child: Column(
+                                children: [
+                                  ui(
+                                      widget.modelDoctorInfo.img,
+                                      widget.modelDoctorInfo.clinicName,
+                                      widget.modelDoctorInfo.address,
+                                      widget.modelDoctorInfo.doctorName
+                                          .capitalize,
+                                      widget.modelDoctorInfo.eveningTime,
+                                      widget.modelDoctorInfo.fees,
+                                      widget.modelDoctorInfo.morningTime,
+                                      widget.modelDoctorInfo.specialization,
+                                      widget.modelDoctorInfo.latitude,
+                                      widget.modelDoctorInfo.longitude,
+                                      widget.modelDoctorInfo.review,
+                                      widget.modelDoctorInfo.distance,
+                                      widget.modelDoctorInfo.docId),
+                                ],
                               ),
-                            );
-                          });
-                        });
-                      }
-                    });
-                  });
-                },
-                child: Card(
-                  color: Colors.black87,
-                  child: Center(
-                    child: Text(
-                      'JOIN',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold),
-                    ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Card(
+                                    color: Color(0xffFFA8A8),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12))),
+                                    elevation: 4,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 20, horizontal: 20),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            "PATIENT COUNT",
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                color: Color(0xff8A1818),
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          StreamBuilder(
+                                              stream: _firestore
+                                                  .collection('queue')
+                                                  .snapshots(),
+                                              builder: (BuildContext context,
+                                                  AsyncSnapshot<QuerySnapshot>
+                                                      snapshot) {
+                                                if (!snapshot.hasData) {
+                                                  return Text("loading....");
+                                                }
+                                                final snap = snapshot.data.docs;
+                                                var count = 0;
+                                                for (var sn in snap) {
+                                                  if (sn.id ==
+                                                      widget.modelDoctorInfo
+                                                          .docId) {
+                                                    count = sn.get('count');
+                                                  }
+                                                }
+                                                return Text(
+                                                  "$count",
+                                                  style: TextStyle(
+                                                      fontSize: 20,
+                                                      color: Color(0xff8A1818),
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                );
+                                              }),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Card(
+                                    color: Color(0xffFFA8A8),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12))),
+                                    elevation: 4,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 20, horizontal: 20),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "EXPECTED TIME",
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                color: Color(0xff8A1818),
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          StreamBuilder(
+                                              stream: _firestore
+                                                  .collection('queue')
+                                                  .snapshots(),
+                                              builder: (BuildContext context,
+                                                  AsyncSnapshot<QuerySnapshot>
+                                                      snapshot) {
+                                                if (!snapshot.hasData) {
+                                                  return Text("loading....");
+                                                }
+                                                final snap = snapshot.data.docs;
+
+                                                for (var sn in snap) {
+                                                  if (sn.id ==
+                                                      widget.modelDoctorInfo
+                                                          .docId) {
+                                                    _count = sn.get('count');
+                                                    break;
+                                                  }
+                                                }
+
+                                                return Text(
+                                                  (_count == 0)
+                                                      ? "${(_count)} min"
+                                                      : "${(_count - 1) * 5} min",
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    color: Color(0xff8A1818),
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                );
+                                              }),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(20),
+                              child: Text(
+                                'ALL MEMBERS',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Color(0xff8A1818),
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Container(
+                              height: 380,
+                              child: StreamBuilder(
+                                // here 2 change
+                                stream: _firestore
+                                    .collection('queue')
+                                    .doc('${widget.modelDoctorInfo.docId}')
+                                    .collection('queue')
+                                    .orderBy('time')
+                                    .snapshots(), // here 1 change
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return Lottie.asset(
+                                        'assets/lottie/queue.json',
+                                        width: 300,
+                                        height: 300,
+                                        frameRate: FrameRate(30),
+                                        repeat: true);
+                                  }
+
+                                  final snap = snapshot.data.docs;
+                                  arr.clear();
+                                  for (var sn in snap) {
+                                    LinkedHashMap<String, dynamic> s =
+                                        sn.data();
+                                    var name = s['name'];
+                                    arr.add(name);
+                                  }
+
+                                  if (arr.length == 0) {
+                                    return queueMember(
+                                        "No member available",
+                                        "",
+                                        Colors.white,
+                                        Colors.white,
+                                        Colors.black);
+                                  } else {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.vertical,
+                                      itemCount: arr.length,
+                                      itemBuilder: (_, index) {
+                                        if (index >= 3) {
+                                          return queueMember(
+                                              "${arr[index]}",
+                                              "${index + 1}.",
+                                              Colors.white,
+                                              Colors.white,
+                                              Colors.black);
+                                        } else {
+                                          return queueMember(
+                                              "${arr[index]}",
+                                              "${index + 1}.",
+                                              Colors.green,
+                                              Colors.lightGreen,
+                                              Colors.white);
+                                        }
+                                      },
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 20),
+                        width: double.infinity,
+                        height: 70,
+                        child: GestureDetector(
+                          onTap: () {
+                            controller.joinQueue(
+                                modelDoctorInfo: widget.modelDoctorInfo,
+                                context: context);
+                            print("tapped");
+                            // String name;
+                            // ref
+                            //     .child("userinfo")
+                            //     .once()
+                            //     .then((DataSnapshot snapshot) {
+                            //   name = snapshot.value['']['name'];
+                            //   print(name);
+                            //   _firestore
+                            //       .collection('queue')
+                            //       .doc('${widget.modelDoctorInfo.docId}')
+                            //       .collection('queue')
+                            //       .doc(uid)
+                            //       .get()
+                            //       .then((value) {
+                            //     if (value.exists) {
+                            //       print("true");
+                            //       Navigator.push(
+                            //         context,
+                            //         MaterialPageRoute(
+                            //           builder: (context) =>
+                            //               ShowRouting(widget.modelDoctorInfo, name),
+                            //         ),
+                            //       );
+                            //     } else {
+                            //       _firestore
+                            //           .collection('queue')
+                            //           .doc('${widget.modelDoctorInfo.docId}')
+                            //           .collection('queue')
+                            //           .doc(uid)
+                            //           .set({
+                            //         'name': name,
+                            //         'time': DateTime.now().millisecondsSinceEpoch,
+                            //         'token': mainController.token.value
+                            //       }).then((value) {
+                            //         print("added");
+                            //       });
+
+                            //       _firestore
+                            //           .collection('queue')
+                            //           .doc('${widget.modelDoctorInfo.docId}')
+                            //           .get()
+                            //           .then((value) {
+                            //         var count = value["count"];
+                            //         _firestore
+                            //             .collection('queue')
+                            //             .doc('${widget.modelDoctorInfo.docId}')
+                            //             .update({'count': ++count}).then((value) {
+                            //           Navigator.push(
+                            //             context,
+                            //             MaterialPageRoute(
+                            //               builder: (context) => ShowRouting(
+                            //                   widget.modelDoctorInfo, name),
+                            //             ),
+                            //           );
+                            //         });
+                            //       });
+                            //     }
+                            //   });
+                            // });
+                          },
+                          child: Card(
+                            color: Colors.black87,
+                            child: Center(
+                              child: Text(
+                                'JOIN',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
                   ),
-                ),
-              ),
-            )
-          ],
-        ),
+                  Obx(() => controller.isLoading
+                      ? Positioned.fill(
+                          child: const CircularProgressIndicator()
+                              .center()
+                              .decorated(
+                                color: Colors.black12,
+                              ),
+                        )
+                      : const SizedBox())
+                ],
+              );
+            }),
       ),
     );
   }

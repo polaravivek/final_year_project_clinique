@@ -120,6 +120,8 @@ class _MapActivityState extends State<MapActivity> {
   }
 
   getList() {
+    list.clear();
+    listNew.clear();
     databaseRef
         .child("doctorInfo")
         .child("clinicInfo")
@@ -308,10 +310,7 @@ class _MapActivityState extends State<MapActivity> {
                             child: SizedBox(
                               width: 45,
                               height: 45,
-                              child: Hero(
-                                tag: img,
-                                child: Image.network(img, fit: BoxFit.cover),
-                              ),
+                              child: Image.network(img, fit: BoxFit.cover),
                             ),
                           ),
                         ),
@@ -645,6 +644,7 @@ class _MapActivityState extends State<MapActivity> {
                             ? new ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemBuilder: (_, index) {
+                                  print("here");
                                   return ui(
                                       index,
                                       listNew[index].img,

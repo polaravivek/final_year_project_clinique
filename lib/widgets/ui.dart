@@ -43,10 +43,7 @@ Widget ui(
                         child: SizedBox(
                           width: 60,
                           height: 60,
-                          child: Hero(
-                            tag: img,
-                            child: Image.network(img, fit: BoxFit.cover),
-                          ),
+                          child: Image.network(img, fit: BoxFit.cover),
                         ),
                       ),
                     ),
