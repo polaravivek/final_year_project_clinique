@@ -7,12 +7,8 @@ import 'package:styled_widget/styled_widget.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-LatLng _center;
 Future<Position> position;
-
-FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class MapActivity extends StatefulWidget {
   @override
@@ -22,156 +18,8 @@ class MapActivity extends StatefulWidget {
 class _MapActivityState extends State<MapActivity> {
   GoogleMapController myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
-  CameraPosition _cameraPosition;
   final databaseRef = FirebaseDatabase.instance.reference();
   final HomePageController homePageController = Get.put(HomePageController());
-
-  // _onMapCreated(GoogleMapController controller) async {
-  //   _myController = controller;
-
-  //   Position position = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.best);
-  //   _center = LatLng(position.latitude, position.longitude);
-  //   _cameraPosition = CameraPosition(target: _center, zoom: 15.0);
-
-  //   markers[MarkerId('id-1')] = Marker(
-  //     position: _center,
-  //     markerId: MarkerId('id-1'),
-  //     icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-  //   );
-
-  //   homePageController
-  //       .printFirebase()
-  //       .then((value) => homePageController.getList());
-
-  //   _myController.animateCamera(
-  //     CameraUpdate.newLatLngZoom(_center, 15),
-  //   );
-  // }
-
-  // printFirebase() {
-  //   databaseRef
-  //       .child("doctorInfo")
-  //       .child('clinicInfo')
-  //       .once()
-  //       .then((DataSnapshot snapshot) {
-  //     var databaseRefIndi = snapshot.value;
-  //     LatLng pos;
-  //     var count = 1;
-  //     var lat;
-  //     var long;
-  //     databaseRefIndi.forEach((key, value) {
-  //       Map<dynamic, dynamic> info = snapshot.value;
-  //       databaseRef
-  //           .child("doctorInfo")
-  //           .child("clinicInfo")
-  //           .child(key.toString())
-  //           .once()
-  //           .then((DataSnapshot snapshot) {
-  //         info = snapshot.value;
-  //         info.forEach((key, value) {
-  //           if (key == "latitude") {
-  //             lat = value;
-  //           } else if (key == "longitude") {
-  //             long = value;
-  //           }
-  //         });
-
-  //         pos = LatLng(lat, long);
-
-  //         count++;
-
-  //         final distance = Geolocator.distanceBetween(
-  //             _center.latitude, _center.longitude, pos.latitude, pos.longitude);
-
-  //         if (distance < 2000) {
-  //           final markerId = MarkerId('id-$count');
-  //           markers[markerId] = Marker(
-  //             markerId: markerId,
-  //             position: pos,
-  //             icon: BitmapDescriptor.defaultMarker,
-  //             onTap: () {
-  //               final Marker tappedMarker = markers[markerId];
-
-  //               if (tappedMarker != null) {
-  //                 listNew.clear();
-
-  //                 list.forEach((element) {
-  //                   if (element.latitude.toStringAsPrecision(7) ==
-  //                           tappedMarker.position.latitude
-  //                               .toStringAsPrecision(7) &&
-  //                       element.longitude.toStringAsPrecision(7) ==
-  //                           tappedMarker.position.longitude
-  //                               .toStringAsPrecision(7)) {
-  //                     setState(() {
-  //                       listNew.add(element);
-  //                     });
-  //                   }
-  //                 });
-  //               } else {
-  //                 print("Tapped marker is NULL..");
-  //               }
-  //             },
-  //           );
-  //         }
-  //       });
-  //     });
-  //   });
-  // }
-
-  // getList() {
-  //   databaseRef
-  //       .child("doctorInfo")
-  //       .child("clinicInfo")
-  //       .get()
-  //       .then((DataSnapshot snapshot) {
-  //     Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
-  //     databaseRefIndi.forEach((key, value) {
-  //       final distance = Geolocator.distanceBetween(_center.latitude,
-  //           _center.longitude, value["latitude"], value["longitude"]);
-
-  //       if (distance < 2000) {
-  //         ModelDoctorInfo modelDoctorInfo;
-
-  //         FirebaseStorage.instance
-  //             .ref()
-  //             .child(value["img"])
-  //             .getDownloadURL()
-  //             .then((url) async {
-  //           var count = 0;
-  //           _firestore.collection('queue').snapshots().forEach((element) async {
-  //             final snap = element.docs;
-  //             for (var sn in snap) {
-  //               if (sn.id.toString() == key.toString()) {
-  //                 count = await sn.get('count');
-  //                 print("here $count");
-  //                 print("here ${value["clinicName"]}");
-  //                 modelDoctorInfo = new ModelDoctorInfo(
-  //                     url,
-  //                     value["clinicName"],
-  //                     value["address"],
-  //                     value["name"],
-  //                     value["evening time"],
-  //                     value["fees"],
-  //                     value["morning time"],
-  //                     value["specialization"],
-  //                     value["latitude"],
-  //                     value["longitude"],
-  //                     distance,
-  //                     value["review"],
-  //                     key,
-  //                     count.toString());
-  //               }
-  //             }
-  //             setState(() {
-  //               list.add(modelDoctorInfo);
-  //             });
-  //           });
-  //         });
-  //       }
-  //     });
-  //   });
-  // }
 
   @override
   void initState() {
@@ -212,8 +60,6 @@ class _MapActivityState extends State<MapActivity> {
       ModelDoctorInfo modelDoctorInfo;
       return GestureDetector(
         onTap: () {
-          print("index is => ${index}");
-
           if (homePageController.listNew.length != 0) {
             var item = homePageController.listNew[index];
             modelDoctorInfo = new ModelDoctorInfo(
@@ -259,7 +105,6 @@ class _MapActivityState extends State<MapActivity> {
           }
         },
         onLongPress: () {
-          print("Long pressed tapped");
           homePageController.changeCamera(LatLng(latitude, longitude));
         },
         child: Container(
