@@ -12,6 +12,7 @@ class SelectedClinicController extends GetxController {
   var uid;
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final num = 0.obs;
   final MainController mainController = Get.find<MainController>();
 
   @override

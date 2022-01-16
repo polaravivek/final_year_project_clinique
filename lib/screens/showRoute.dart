@@ -96,24 +96,33 @@ class _RouteState extends State<ShowRouting> {
     setState(() {
       _info = directions;
     });
-    if (_info != null) {
-      _polyline.add(
-        Polyline(
-          polylineId: PolylineId('overview_polyline'),
-          color: Colors.red,
-          width: 5,
-          points: _info.polylinePoints
-              .map(
-                (e) => LatLng(e.latitude, e.longitude),
-              )
-              .toList(),
-        ),
-      );
 
-      setState(() {
-        isLoading = false;
-      });
-    }
+    _firestore
+        .collection('queue')
+        .doc(widget.modelDoctorInfo.docId)
+        .collection('queue')
+        .doc(uid)
+        .update({'distance': _info.totalDuration}).then((value) {
+      print("done");
+      if (_info != null) {
+        _polyline.add(
+          Polyline(
+            polylineId: PolylineId('overview_polyline'),
+            color: Colors.red,
+            width: 5,
+            points: _info.polylinePoints
+                .map(
+                  (e) => LatLng(e.latitude, e.longitude),
+                )
+                .toList(),
+          ),
+        );
+
+        setState(() {
+          isLoading = false;
+        });
+      }
+    });
   }
 
   @override
@@ -248,29 +257,35 @@ class _RouteState extends State<ShowRouting> {
                                         .collection('queue')
                                         .doc('${widget.modelDoctorInfo.docId}')
                                         .collection('queue')
-                                        .orderBy('time')
                                         .get()
                                         .then((value) {
-                                      var elem = value.docs.first;
-                                      // print(elem.data());
-                                      elem.reference.delete().then((value) {
-                                        _firestore
-                                            .collection('queue')
-                                            .doc(
-                                                '${widget.modelDoctorInfo.docId}')
-                                            .get()
-                                            .then((value) {
-                                          var count = value["count"];
+                                      var elem = value.docs;
 
-                                          _firestore
-                                              .collection('queue')
-                                              .doc(
-                                                  '${widget.modelDoctorInfo.docId}')
-                                              .update({'count': --count}).then(
-                                                  (value) {
-                                            Navigator.pop(context);
+                                      elem.forEach((element) {
+                                        if (element.id == uid) {
+                                          element.reference
+                                              .delete()
+                                              .then((value) {
+                                            _firestore
+                                                .collection('queue')
+                                                .doc(
+                                                    '${widget.modelDoctorInfo.docId}')
+                                                .get()
+                                                .then((value) {
+                                              var count = value["count"];
+
+                                              _firestore
+                                                  .collection('queue')
+                                                  .doc(
+                                                      '${widget.modelDoctorInfo.docId}')
+                                                  .update({
+                                                'count': --count
+                                              }).then((value) {
+                                                Navigator.pop(context);
+                                              });
+                                            });
                                           });
-                                        });
+                                        }
                                       });
                                     });
                                   },

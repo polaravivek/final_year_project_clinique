@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clinique/controller/homepage.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/selectedClinic.dart';
@@ -7,6 +8,7 @@ import 'package:styled_widget/styled_widget.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<Position> position;
 
@@ -78,9 +80,11 @@ class _MapActivityState extends State<MapActivity> {
                 docId,
                 item.count);
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SelectedClinic(modelDoctorInfo)));
+              context,
+              MaterialPageRoute(
+                builder: (context) => SelectedClinic(modelDoctorInfo),
+              ),
+            );
           } else {
             var item = homePageController.list[index];
             modelDoctorInfo = new ModelDoctorInfo(
@@ -132,16 +136,40 @@ class _MapActivityState extends State<MapActivity> {
                           ),
                         ),
                       ),
-                      Text(
-                        '$count',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: (int.parse(count) >= 10)
-                              ? Colors.red
-                              : Colors.green,
-                          fontSize: 20,
-                        ),
-                      ),
+                      StreamBuilder(
+                          stream: homePageController.firestore
+                              .collection('queue')
+                              .snapshots(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (!snapshot.hasData) {
+                              return CircularProgressIndicator().center();
+                            }
+                            final snap = snapshot.data.docs;
+                            var count = 0;
+                            for (var sn in snap) {
+                              if (sn.id == docId) {
+                                count = sn.get('count');
+                              }
+                            }
+                            return Text("$count",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      (count >= 10) ? Colors.red : Colors.green,
+                                  fontSize: 20,
+                                ));
+                          }),
+                      // Text(
+                      //   '$count',
+                      //   style: TextStyle(
+                      //     fontWeight: FontWeight.bold,
+                      //     color: (int.parse(count) >= 10)
+                      //         ? Colors.red
+                      //         : Colors.green,
+                      //     fontSize: 20,
+                      //   ),
+                      // ),
                     ],
                   ),
                   SizedBox(
@@ -159,7 +187,10 @@ class _MapActivityState extends State<MapActivity> {
                             child: SizedBox(
                               width: 45,
                               height: 45,
-                              child: Image.network(img, fit: BoxFit.cover),
+                              child: CachedNetworkImage(
+                                imageUrl: img,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
@@ -490,7 +521,8 @@ class _MapActivityState extends State<MapActivity> {
                                   onMapCreated: controller.onMapCreated,
                                   markers:
                                       Set<Marker>.of(controller.markers.values),
-                                  onTap: controller.handleTap,
+                                  onTap: (latlang) =>
+                                      controller.handleTap(latlang),
                                   initialCameraPosition:
                                       controller.getCameraPosition,
                                 )),
@@ -517,19 +549,25 @@ class _MapActivityState extends State<MapActivity> {
                                 child: Obx(() {
                                   print(controller.list.length);
                                   print(controller.listNew.length);
+                                  print(controller.filteredList.length);
                                   return Container(
                                       height: 170,
-                                      child: (controller.filteredList.length ==
-                                                  controller.list.length ||
+                                      child: ((controller.filteredList.length ==
+                                                      controller.list.length ||
+                                                  controller.filteredList
+                                                          .length ==
+                                                      controller
+                                                          .listNew.length) ||
                                               controller.filteredList.length ==
-                                                  controller.listNew.length)
+                                                  0)
                                           ? controller.listNew.length != 0
                                               ? Obx(() {
+                                                  print(
+                                                      "showing from new list");
                                                   return ListView.builder(
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     itemBuilder: (_, index) {
-                                                      print("here");
                                                       var item = controller
                                                           .listNew[index];
                                                       return ui(
@@ -556,6 +594,8 @@ class _MapActivityState extends State<MapActivity> {
                                               : controller.list == null
                                                   ? CircularProgressIndicator()
                                                   : Obx(() {
+                                                      print(
+                                                          "showing from list");
                                                       return ListView.builder(
                                                         scrollDirection:
                                                             Axis.horizontal,
@@ -589,7 +629,8 @@ class _MapActivityState extends State<MapActivity> {
                                                 scrollDirection:
                                                     Axis.horizontal,
                                                 itemBuilder: (_, index) {
-                                                  print(index);
+                                                  print(
+                                                      "showing from filtered list");
                                                   var item = controller
                                                       .filteredList[index];
                                                   return ui(

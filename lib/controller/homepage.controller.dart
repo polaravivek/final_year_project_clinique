@@ -8,7 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePageController extends GetxController {
   final databaseRef = FirebaseDatabase.instance.reference();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{}.obs;
   GoogleMapController myController;
 
@@ -36,7 +36,7 @@ class HomePageController extends GetxController {
   stopListLoading() => listLoading.value = false;
 
   changeCamera(LatLng target) => myController.animateCamera(
-        CameraUpdate.newLatLngZoom(target, 17),
+        CameraUpdate.newLatLngZoom(target, 16),
       );
 
   @override
@@ -48,6 +48,7 @@ class HomePageController extends GetxController {
 
   void handleTap(LatLng tappedPoint) {
     listNew.clear();
+    print("called handle tap");
 
     list.forEach((element) {
       if (element.latitude == tappedPoint.latitude &&
@@ -80,7 +81,7 @@ class HomePageController extends GetxController {
     );
   }
 
-  Future<void> printFirebase() {
+  printFirebase() {
     databaseRef
         .child("doctorInfo")
         .child('clinicInfo')
@@ -121,36 +122,37 @@ class HomePageController extends GetxController {
           if (distance < 2000) {
             final markerId = MarkerId('id-$count');
 
+            // markers[markerId] = Marker(
+            //   markerId: markerId,
+            //   position: pos,
+            //   icon: BitmapDescriptor.defaultMarker,
+            //   onTap: () {
+            //     final Marker tappedMarker = markers[markerId];
+
+            //     if (tappedMarker != null) {
+            //       listNew.clear();
+
+            //       list.forEach((element) {
+            //         if (element.latitude.toStringAsPrecision(7) ==
+            //                 tappedMarker.position.latitude
+            //                     .toStringAsPrecision(7) &&
+            //             element.longitude.toStringAsPrecision(7) ==
+            //                 tappedMarker.position.longitude
+            //                     .toStringAsPrecision(7)) {
+            //           listNew.add(element);
+            //         }
+            //       });
+            //     } else {
+            //       print("Tapped marker is NULL..");
+            //     }
+            //   },
+            // );
             markers[markerId] = Marker(
               markerId: markerId,
               position: pos,
               icon: BitmapDescriptor.defaultMarker,
               onTap: () {
-                final Marker tappedMarker = markers[markerId];
-
-                if (tappedMarker != null) {
-                  listNew.clear();
-
-                  list.forEach((element) {
-                    if (element.latitude.toStringAsPrecision(7) ==
-                            tappedMarker.position.latitude
-                                .toStringAsPrecision(7) &&
-                        element.longitude.toStringAsPrecision(7) ==
-                            tappedMarker.position.longitude
-                                .toStringAsPrecision(7)) {
-                      listNew.add(element);
-                    }
-                  });
-                } else {
-                  print("Tapped marker is NULL..");
-                }
-              },
-            );
-            markers[markerId] = Marker(
-              markerId: markerId,
-              position: pos,
-              icon: BitmapDescriptor.defaultMarker,
-              onTap: () {
+                print("tapped marker");
                 final Marker tappedMarker = markers[markerId];
 
                 if (tappedMarker != null) {
@@ -177,10 +179,8 @@ class HomePageController extends GetxController {
     });
   }
 
-  Future<void> getList() {
+  getList() {
     startListLoading();
-    list.clear();
-    listNew.clear();
     startLoading();
     databaseRef
         .child("doctorInfo")
@@ -190,8 +190,6 @@ class HomePageController extends GetxController {
       Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
 
       databaseRefIndi.forEach((key, value) {
-        list.clear();
-        listNew.clear();
         final distance = Geolocator.distanceBetween(center.value.latitude,
             center.value.longitude, value["latitude"], value["longitude"]);
 
@@ -205,41 +203,40 @@ class HomePageController extends GetxController {
               .then((url) async {
             var count = 0;
 
-            _firestore.collection('queue').snapshots().forEach((element) async {
-              print("here count");
+            // firestore.collection('queue').snapshots().forEach((element) async {
+            //   print("here count");
 
-              final snap = element.docs;
-              for (var sn in snap) {
-                if (sn.id.toString() == key.toString()) {
-                  count = await sn.get('count');
-                }
-                print("here $count");
-                print("here ${value["clinicName"]}");
-                modelDoctorInfo = new ModelDoctorInfo(
-                    url,
-                    value["clinicName"],
-                    value["address"],
-                    value["name"],
-                    value["evening time"],
-                    value["fees"],
-                    value["morning time"],
-                    value["specialization"],
-                    value["latitude"],
-                    value["longitude"],
-                    distance,
-                    value["review"],
-                    key,
-                    count.toString());
-              }
-              list.add(modelDoctorInfo);
-            });
-            stopListLoading();
+            // final snap = element.docs;
+            // for (var sn in snap) {
+            // if (sn.id.toString() == key.toString()) {
+            //   count = await sn.get('count');
+            // }
+            // print("here $count");
+            // print("here ${value["clinicName"]}");
+            modelDoctorInfo = new ModelDoctorInfo(
+              url,
+              value["clinicName"],
+              value["address"],
+              value["name"],
+              value["evening time"],
+              value["fees"],
+              value["morning time"],
+              value["specialization"],
+              value["latitude"],
+              value["longitude"],
+              distance,
+              value["review"],
+              key,
+              count.toString(),
+            );
+            // }
+            list.add(modelDoctorInfo);
           });
+          // });
         }
       });
-      print("stop");
 
       print("length of list => ${list.length}");
-    });
+    }).then((value) => stopListLoading());
   }
 }

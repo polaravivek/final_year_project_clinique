@@ -257,6 +257,10 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                           StreamBuilder(
                                               stream: _firestore
                                                   .collection('queue')
+                                                  .doc(widget
+                                                      .modelDoctorInfo.docId)
+                                                  .collection('queue')
+                                                  .orderBy('time')
                                                   .snapshots(),
                                               builder: (BuildContext context,
                                                   AsyncSnapshot<QuerySnapshot>
@@ -265,26 +269,100 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                   return Text("loading....");
                                                 }
                                                 final snap = snapshot.data.docs;
+                                                var count = 0;
+                                                var flag = false;
 
                                                 for (var sn in snap) {
-                                                  if (sn.id ==
-                                                      widget.modelDoctorInfo
-                                                          .docId) {
-                                                    _count = sn.get('count');
+                                                  if (sn.id == uid) {
+                                                    flag = true;
                                                     break;
+                                                  } else {
+                                                    count++;
                                                   }
                                                 }
 
-                                                return Text(
-                                                  (_count == 0)
-                                                      ? "${(_count)} min"
-                                                      : "${(_count - 1) * 5} min",
-                                                  style: TextStyle(
-                                                    fontSize: 20,
-                                                    color: Color(0xff8A1818),
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                );
+                                                print("flag is ${flag}");
+                                                print("count is ${count}");
+                                                if (flag) {
+                                                  String duration;
+                                                  int num = 0;
+                                                  var isChanged = false;
+                                                  _firestore
+                                                      .collection("queue")
+                                                      .doc(widget
+                                                          .modelDoctorInfo
+                                                          .docId)
+                                                      .collection("queue")
+                                                      .get()
+                                                      .then((value) {
+                                                    var elem = value.docs;
+
+                                                    for (var e in elem) {
+                                                      if (e.id == uid) {
+                                                        duration = e
+                                                            .data()["distance"];
+                                                        break;
+                                                      }
+                                                    }
+                                                    controller.num.value =
+                                                        int.parse(duration
+                                                            .split(" ")[0]);
+                                                    print(num);
+                                                  });
+
+                                                  return Text(
+                                                    (count == 0)
+                                                        ? "${(count)} min"
+                                                        : "${(count) * 5 - controller.num.value} min",
+                                                    style: TextStyle(
+                                                      fontSize: 20,
+                                                      color: Color(0xff8A1818),
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  );
+                                                } else {
+                                                  return StreamBuilder(
+                                                      stream: _firestore
+                                                          .collection('queue')
+                                                          .snapshots(),
+                                                      builder: (BuildContext
+                                                              context,
+                                                          AsyncSnapshot<
+                                                                  QuerySnapshot>
+                                                              snapshot) {
+                                                        if (!snapshot.hasData) {
+                                                          return Text(
+                                                              "loading....");
+                                                        }
+                                                        final snap =
+                                                            snapshot.data.docs;
+
+                                                        for (var sn in snap) {
+                                                          if (sn.id ==
+                                                              widget
+                                                                  .modelDoctorInfo
+                                                                  .docId) {
+                                                            _count =
+                                                                sn.get('count');
+                                                            break;
+                                                          }
+                                                        }
+
+                                                        return Text(
+                                                          (_count == 0)
+                                                              ? "${(_count)} min"
+                                                              : "${(_count - 1) * 5} min",
+                                                          style: TextStyle(
+                                                            fontSize: 20,
+                                                            color: Color(
+                                                                0xff8A1818),
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        );
+                                                      });
+                                                }
                                               }),
                                         ],
                                       ),

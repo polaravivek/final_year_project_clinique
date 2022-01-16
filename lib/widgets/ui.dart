@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 Widget ui(
@@ -41,10 +42,12 @@ Widget ui(
                       radius: 35,
                       child: ClipOval(
                         child: SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: Image.network(img, fit: BoxFit.cover),
-                        ),
+                            width: 60,
+                            height: 60,
+                            child: CachedNetworkImage(
+                              imageUrl: img,
+                              fit: BoxFit.cover,
+                            )),
                       ),
                     ),
                   ),
