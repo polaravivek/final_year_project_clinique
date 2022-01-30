@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:clinique/model/direction_model.dart';
@@ -12,15 +13,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-LatLng _center;
+LatLng? _center;
 
 FirebaseFirestore _firestore = FirebaseFirestore.instance;
 var uid;
 var ref;
 
 class ShowRouting extends StatefulWidget {
-  final ModelDoctorInfo modelDoctorInfo;
-  final String name;
+  final ModelDoctorInfo? modelDoctorInfo;
+  final String? name;
 
   const ShowRouting(this.modelDoctorInfo, this.name);
 
@@ -29,11 +30,11 @@ class ShowRouting extends StatefulWidget {
 }
 
 class _RouteState extends State<ShowRouting> {
-  GoogleMapController _myController;
+  late GoogleMapController _myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   final Set<Polyline> _polyline = {};
-  CameraPosition _cameraPosition;
-  Directions _info;
+  CameraPosition? _cameraPosition;
+  Directions? _info;
   bool isLoading = true;
 
   _onMapCreated(GoogleMapController controller) async {
@@ -43,10 +44,10 @@ class _RouteState extends State<ShowRouting> {
         desiredAccuracy: LocationAccuracy.best);
 
     _center = LatLng(position.latitude, position.longitude);
-    _cameraPosition = CameraPosition(target: _center, zoom: 16.0);
+    _cameraPosition = CameraPosition(target: _center!, zoom: 16.0);
 
     markers[MarkerId('id-1')] = Marker(
-      position: _center,
+      position: _center!,
       markerId: MarkerId('id-1'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
     );
@@ -54,20 +55,20 @@ class _RouteState extends State<ShowRouting> {
     printFirebase();
 
     _myController.animateCamera(
-      CameraUpdate.newLatLngZoom(_center, 16),
+      CameraUpdate.newLatLngZoom(_center!, 16),
     );
   }
 
-  Future<LatLng> _findCurrentLocation() async {
+  Future<LatLng?> _findCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
 
     setState(() {
       _center = LatLng(position.latitude, position.longitude);
-      _cameraPosition = CameraPosition(target: _center, zoom: 16.0);
+      _cameraPosition = CameraPosition(target: _center!, zoom: 16.0);
 
       markers[MarkerId('id-1')] = Marker(
-        position: _center,
+        position: _center!,
         markerId: MarkerId('id-1'),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       );
@@ -80,7 +81,7 @@ class _RouteState extends State<ShowRouting> {
 
   printFirebase() async {
     LatLng pos = LatLng(
-        widget.modelDoctorInfo.latitude, widget.modelDoctorInfo.longitude);
+        widget.modelDoctorInfo!.latitude!, widget.modelDoctorInfo!.longitude!);
     final markerId = MarkerId('id-2');
     markers[MarkerId('id-2')] = Marker(
       markerId: markerId,
@@ -88,8 +89,8 @@ class _RouteState extends State<ShowRouting> {
       icon: BitmapDescriptor.defaultMarker,
     );
 
-    final directions = await DirectionsRepository()
-        .getDirections(origin: _center, destination: pos);
+    final directions = await (DirectionsRepository().getDirections(
+        origin: _center!, destination: pos) as FutureOr<Directions>);
 
     print("directions ${directions.totalDistance}");
 
@@ -99,10 +100,10 @@ class _RouteState extends State<ShowRouting> {
 
     _firestore
         .collection('queue')
-        .doc(widget.modelDoctorInfo.docId)
+        .doc(widget.modelDoctorInfo!.docId)
         .collection('queue')
         .doc(uid)
-        .update({'distance': _info.totalDuration}).then((value) {
+        .update({'distance': _info!.totalDuration}).then((value) {
       print("done");
       if (_info != null) {
         _polyline.add(
@@ -110,7 +111,7 @@ class _RouteState extends State<ShowRouting> {
             polylineId: PolylineId('overview_polyline'),
             color: Colors.red,
             width: 5,
-            points: _info.polylinePoints
+            points: _info!.polylinePoints
                 .map(
                   (e) => LatLng(e.latitude, e.longitude),
                 )
@@ -129,7 +130,7 @@ class _RouteState extends State<ShowRouting> {
   void initState() {
     FirebaseAuth auth = FirebaseAuth.instance;
     ref = FirebaseDatabase.instance.reference();
-    uid = auth.currentUser.uid;
+    uid = auth.currentUser!.uid;
 
     super.initState();
   }
@@ -155,7 +156,7 @@ class _RouteState extends State<ShowRouting> {
           title: StreamBuilder(
             stream: _firestore
                 .collection('queue')
-                .doc('${widget.modelDoctorInfo.docId}')
+                .doc('${widget.modelDoctorInfo!.docId}')
                 .collection('queue')
                 .orderBy('time')
                 .snapshots(),
@@ -207,7 +208,7 @@ class _RouteState extends State<ShowRouting> {
                         markers: Set<Marker>.of(markers.values),
                         initialCameraPosition: _cameraPosition == null
                             ? CameraPosition(target: LatLng(20.5937, 78.9629))
-                            : _cameraPosition,
+                            : _cameraPosition!,
                       ),
                       Padding(
                         padding: const EdgeInsets.all(14.0),
@@ -217,7 +218,9 @@ class _RouteState extends State<ShowRouting> {
                             onPressed: () async {
                               _myController.animateCamera(
                                   CameraUpdate.newLatLngZoom(
-                                      await _findCurrentLocation(), 16));
+                                      await (_findCurrentLocation()
+                                          as FutureOr<LatLng>),
+                                      16));
                             },
                             materialTapTargetSize: MaterialTapTargetSize.padded,
                             backgroundColor: Colors.green,
@@ -255,7 +258,7 @@ class _RouteState extends State<ShowRouting> {
                                   onPressed: () {
                                     _firestore
                                         .collection('queue')
-                                        .doc('${widget.modelDoctorInfo.docId}')
+                                        .doc('${widget.modelDoctorInfo!.docId}')
                                         .collection('queue')
                                         .get()
                                         .then((value) {
@@ -269,7 +272,7 @@ class _RouteState extends State<ShowRouting> {
                                             _firestore
                                                 .collection('queue')
                                                 .doc(
-                                                    '${widget.modelDoctorInfo.docId}')
+                                                    '${widget.modelDoctorInfo!.docId}')
                                                 .get()
                                                 .then((value) {
                                               var count = value["count"];
@@ -277,7 +280,7 @@ class _RouteState extends State<ShowRouting> {
                                               _firestore
                                                   .collection('queue')
                                                   .doc(
-                                                      '${widget.modelDoctorInfo.docId}')
+                                                      '${widget.modelDoctorInfo!.docId}')
                                                   .update({
                                                 'count': --count
                                               }).then((value) {

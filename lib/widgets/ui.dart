@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 
 Widget ui(
     String img,
-    String clinicName,
-    String address,
-    String doctorName,
-    String eveningTime,
-    String fees,
-    String morningTime,
-    String specialization,
-    double latitude,
-    double longitude,
-    int review,
-    double distance,
-    String uid) {
+    String? clinicName,
+    String? address,
+    String? doctorName,
+    String? eveningTime,
+    String? fees,
+    String? morningTime,
+    String? specialization,
+    double? latitude,
+    double? longitude,
+    int? review,
+    double? distance,
+    String? uid) {
   return Padding(
     padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16, bottom: 5),
     child: Container(
@@ -29,9 +29,6 @@ Widget ui(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: 3,
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -112,9 +109,21 @@ Widget ui(
                   )
                 ],
               ),
-              SizedBox(
-                height: 5,
-              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Get Future Clinic Status Click Me : ",
+                    style: TextStyle(
+                        color: Color(0xff8A1818), fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    color: Color(0xff8A1818),
+                    icon: Icon(Icons.arrow_forward),
+                    onPressed: () {},
+                  )
+                ],
+              )
             ],
           ),
         ),

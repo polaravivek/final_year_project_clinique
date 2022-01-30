@@ -25,7 +25,7 @@ const MaterialColor _buttonTextColor = MaterialColor(0xFFFFB5B5, <int, Color>{
 });
 
 class _MyAppState extends State<Register> {
-  String email, password, name, dob, phoneNo, confirmPass;
+  String? email, password, name, dob, phoneNo, confirmPass;
   final auth = FirebaseAuth.instance;
   final fb = FirebaseDatabase.instance;
 
@@ -41,12 +41,12 @@ class _MyAppState extends State<Register> {
       TextEditingController();
 
   Future<Null> _selectDate(BuildContext context) async {
-    final DateTime _datePicker = await showDatePicker(
+    final DateTime? _datePicker = await showDatePicker(
         context: context,
         initialDate: DateTime(_date.year),
         firstDate: DateTime(1945),
         lastDate: DateTime(finalYear.year),
-        builder: (BuildContext context, Widget child) {
+        builder: (BuildContext context, Widget? child) {
           return Theme(
             data: ThemeData(
               primaryColor: Color(0xFFFFB5B5),
@@ -54,7 +54,7 @@ class _MyAppState extends State<Register> {
                   ColorScheme.fromSwatch(primarySwatch: _buttonTextColor)
                       .copyWith(secondary: Color(0xFFFFB5B5)),
             ),
-            child: child,
+            child: child!,
           );
         });
     {
@@ -249,7 +249,7 @@ class _MyAppState extends State<Register> {
                                             _dateController.text);
                                     ref
                                         .child("userinfo")
-                                        .child(auth.currentUser.uid)
+                                        .child(auth.currentUser!.uid)
                                         .set({
                                       "name": userInfoModel.name,
                                       "email": userInfoModel.email,
@@ -264,7 +264,7 @@ class _MyAppState extends State<Register> {
                                     });
                                   }
                                 } else {
-                                  return Text("password doesn't match");
+                                  return print("MisMatch");
                                 }
                               },
                               child: Text("Register"),
@@ -307,10 +307,10 @@ class _MyAppState extends State<Register> {
 
 class RegisterTextField extends StatelessWidget {
   const RegisterTextField({
-    Key key,
-    @required this.controller,
-    @required this.hintText,
-    @required this.textInputType,
+    Key? key,
+    required this.controller,
+    required this.hintText,
+    required this.textInputType,
     this.obscure,
     this.maxlength,
   });
@@ -318,15 +318,15 @@ class RegisterTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType textInputType;
-  final bool obscure;
-  final int maxlength;
+  final bool? obscure;
+  final int? maxlength;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 60),
       child: TextField(
-        maxLength: (maxlength != null) ? maxlength : 20,
+        maxLength: (maxlength != null) ? maxlength : 40,
         obscureText: (obscure == null) ? false : true,
         cursorColor: Color(0xFF9B3D3D),
         controller: controller,

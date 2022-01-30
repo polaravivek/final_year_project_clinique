@@ -1,5 +1,5 @@
 class UserInfoModel {
-  final String name;
+  final String? name;
   final String email;
   final String phoneNo;
   final String dob;

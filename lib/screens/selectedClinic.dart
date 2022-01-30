@@ -14,7 +14,7 @@ import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-var _count = 0;
+int? _count = 0;
 
 // extension StringExtension on String {
 //   String capitalize() {
@@ -44,7 +44,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
     FirebaseAuth auth = FirebaseAuth.instance;
     final fb = FirebaseDatabase.instance;
     ref = fb.reference();
-    uid = auth.currentUser.uid;
+    uid = auth.currentUser!.uid;
 
     super.initState();
   }
@@ -125,7 +125,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
       ),
     );
 
-    List<String> arr = [];
+    List<String?> arr = [];
     return SafeArea(
       child: Scaffold(
         backgroundColor: Color(0xffFFC7C7),
@@ -133,7 +133,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
           backgroundColor: Color(0xff8A1818),
           title: Center(
             child: Text(
-              widget.modelDoctorInfo.clinicName.capitalize + " queue",
+              widget.modelDoctorInfo.clinicName!.capitalize! + " queue",
               style: TextStyle(color: Colors.white, letterSpacing: 1.2),
             ),
           ),
@@ -149,25 +149,27 @@ class _SelectedClinicState extends State<SelectedClinic> {
                       Container(
                         child: Column(
                           children: [
-                            Container(
-                              child: Column(
-                                children: [
-                                  ui(
-                                      widget.modelDoctorInfo.img,
-                                      widget.modelDoctorInfo.clinicName,
-                                      widget.modelDoctorInfo.address,
-                                      widget.modelDoctorInfo.doctorName
-                                          .capitalize,
-                                      widget.modelDoctorInfo.eveningTime,
-                                      widget.modelDoctorInfo.fees,
-                                      widget.modelDoctorInfo.morningTime,
-                                      widget.modelDoctorInfo.specialization,
-                                      widget.modelDoctorInfo.latitude,
-                                      widget.modelDoctorInfo.longitude,
-                                      widget.modelDoctorInfo.review,
-                                      widget.modelDoctorInfo.distance,
-                                      widget.modelDoctorInfo.docId),
-                                ],
+                            SingleChildScrollView(
+                              child: Container(
+                                child: Column(
+                                  children: [
+                                    ui(
+                                        widget.modelDoctorInfo.img!,
+                                        widget.modelDoctorInfo.clinicName,
+                                        widget.modelDoctorInfo.address,
+                                        widget.modelDoctorInfo.doctorName!
+                                            .capitalize,
+                                        widget.modelDoctorInfo.eveningTime,
+                                        widget.modelDoctorInfo.fees,
+                                        widget.modelDoctorInfo.morningTime,
+                                        widget.modelDoctorInfo.specialization,
+                                        widget.modelDoctorInfo.latitude,
+                                        widget.modelDoctorInfo.longitude,
+                                        widget.modelDoctorInfo.review,
+                                        widget.modelDoctorInfo.distance,
+                                        widget.modelDoctorInfo.docId),
+                                  ],
+                                ),
                               ),
                             ),
                             Container(
@@ -197,33 +199,55 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                             height: 10,
                                           ),
                                           StreamBuilder(
-                                              stream: _firestore
-                                                  .collection('queue')
-                                                  .snapshots(),
-                                              builder: (BuildContext context,
-                                                  AsyncSnapshot<QuerySnapshot>
-                                                      snapshot) {
-                                                if (!snapshot.hasData) {
-                                                  return Text("loading....");
+                                            stream: _firestore
+                                                .collection('queue')
+                                                .doc(
+                                                    '${widget.modelDoctorInfo.docId}')
+                                                .collection('queue')
+                                                .orderBy('time')
+                                                .snapshots(),
+                                            builder: (BuildContext context,
+                                                AsyncSnapshot<QuerySnapshot>
+                                                    snapshot) {
+                                              if (!snapshot.hasData) {
+                                                return SizedBox(
+                                                  height: 15,
+                                                  width: 15,
+                                                  child:
+                                                      CircularProgressIndicator()
+                                                          .center(),
+                                                );
+                                              }
+
+                                              int count = 0;
+                                              var flag = false;
+                                              final snap = snapshot.data!.docs;
+
+                                              for (var sn in snap) {
+                                                if (sn.id == uid) {
+                                                  flag = true;
+                                                  break;
+                                                } else {
+                                                  count++;
                                                 }
-                                                final snap = snapshot.data.docs;
-                                                var count = 0;
-                                                for (var sn in snap) {
-                                                  if (sn.id ==
-                                                      widget.modelDoctorInfo
-                                                          .docId) {
-                                                    count = sn.get('count');
-                                                  }
-                                                }
-                                                return Text(
-                                                  "$count",
-                                                  style: TextStyle(
+                                              }
+                                              return Row(
+                                                children: [
+                                                  Text(
+                                                    (flag)
+                                                        ? "${count + 1}"
+                                                        : "${snap.length}",
+                                                    style: TextStyle(
                                                       fontSize: 20,
                                                       color: Color(0xff8A1818),
                                                       fontWeight:
-                                                          FontWeight.bold),
-                                                );
-                                              }),
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -266,9 +290,16 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                   AsyncSnapshot<QuerySnapshot>
                                                       snapshot) {
                                                 if (!snapshot.hasData) {
-                                                  return Text("loading....");
+                                                  return SizedBox(
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator()
+                                                            .center(),
+                                                  );
                                                 }
-                                                final snap = snapshot.data.docs;
+                                                final snap =
+                                                    snapshot.data!.docs;
                                                 var count = 0;
                                                 var flag = false;
 
@@ -281,12 +312,9 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                   }
                                                 }
 
-                                                print("flag is ${flag}");
-                                                print("count is ${count}");
                                                 if (flag) {
-                                                  String duration;
+                                                  String? duration;
                                                   int num = 0;
-                                                  var isChanged = false;
                                                   _firestore
                                                       .collection("queue")
                                                       .doc(widget
@@ -305,22 +333,31 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                       }
                                                     }
                                                     controller.num.value =
-                                                        int.parse(duration
+                                                        int.parse(duration!
                                                             .split(" ")[0]);
                                                     print(num);
                                                   });
 
-                                                  return Text(
-                                                    (count == 0)
-                                                        ? "${(count)} min"
-                                                        : "${(count) * 5 - controller.num.value} min",
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      color: Color(0xff8A1818),
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  );
+                                                  return Obx(() => Text(
+                                                        (count == 0 &&
+                                                                controller
+                                                                        .number ==
+                                                                    0)
+                                                            ? "${(count)} min"
+                                                            : (((count) * 5 -
+                                                                        controller
+                                                                            .number) <=
+                                                                    0)
+                                                                ? "${((count) * 5)} min"
+                                                                : "${((count) * 5 - controller.number + 2)} min",
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          color:
+                                                              Color(0xff8A1818),
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ));
                                                 } else {
                                                   return StreamBuilder(
                                                       stream: _firestore
@@ -336,7 +373,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                               "loading....");
                                                         }
                                                         final snap =
-                                                            snapshot.data.docs;
+                                                            snapshot.data!.docs;
 
                                                         for (var sn in snap) {
                                                           if (sn.id ==
@@ -352,7 +389,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                                         return Text(
                                                           (_count == 0)
                                                               ? "${(_count)} min"
-                                                              : "${(_count - 1) * 5} min",
+                                                              : "${(_count!) * 5} min",
                                                           style: TextStyle(
                                                             fontSize: 20,
                                                             color: Color(
@@ -382,7 +419,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
                               ),
                             ),
                             Container(
-                              height: 380,
+                              height: 330,
                               child: StreamBuilder(
                                 // here 2 change
                                 stream: _firestore
@@ -402,43 +439,47 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                         repeat: true);
                                   }
 
-                                  final snap = snapshot.data.docs;
+                                  final snap = snapshot.data!.docs;
                                   arr.clear();
                                   for (var sn in snap) {
-                                    LinkedHashMap<String, dynamic> s =
-                                        sn.data();
+                                    LinkedHashMap<String, dynamic> s = sn.data()
+                                        as LinkedHashMap<String, dynamic>;
                                     var name = s['name'];
                                     arr.add(name);
                                   }
 
                                   if (arr.length == 0) {
-                                    return queueMember(
-                                        "No member available",
-                                        "",
-                                        Colors.white,
-                                        Colors.white,
-                                        Colors.black);
+                                    return Expanded(
+                                      child: queueMember(
+                                          "No member available",
+                                          "",
+                                          Colors.white,
+                                          Colors.white,
+                                          Colors.black),
+                                    );
                                   } else {
-                                    return ListView.builder(
-                                      scrollDirection: Axis.vertical,
-                                      itemCount: arr.length,
-                                      itemBuilder: (_, index) {
-                                        if (index >= 3) {
-                                          return queueMember(
-                                              "${arr[index]}",
-                                              "${index + 1}.",
-                                              Colors.white,
-                                              Colors.white,
-                                              Colors.black);
-                                        } else {
-                                          return queueMember(
-                                              "${arr[index]}",
-                                              "${index + 1}.",
-                                              Colors.green,
-                                              Colors.lightGreen,
-                                              Colors.white);
-                                        }
-                                      },
+                                    return Expanded(
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.vertical,
+                                        itemCount: arr.length,
+                                        itemBuilder: (_, index) {
+                                          if (index >= 3) {
+                                            return queueMember(
+                                                "${arr[index]}",
+                                                "${index + 1}.",
+                                                Colors.white,
+                                                Colors.white,
+                                                Colors.black);
+                                          } else {
+                                            return queueMember(
+                                                "${arr[index]}",
+                                                "${index + 1}.",
+                                                Colors.green,
+                                                Colors.lightGreen,
+                                                Colors.white);
+                                          }
+                                        },
+                                      ),
                                     );
                                   }
                                 },
@@ -456,66 +497,6 @@ class _SelectedClinicState extends State<SelectedClinic> {
                             controller.joinQueue(
                                 modelDoctorInfo: widget.modelDoctorInfo,
                                 context: context);
-                            print("tapped");
-                            // String name;
-                            // ref
-                            //     .child("userinfo")
-                            //     .once()
-                            //     .then((DataSnapshot snapshot) {
-                            //   name = snapshot.value['']['name'];
-                            //   print(name);
-                            //   _firestore
-                            //       .collection('queue')
-                            //       .doc('${widget.modelDoctorInfo.docId}')
-                            //       .collection('queue')
-                            //       .doc(uid)
-                            //       .get()
-                            //       .then((value) {
-                            //     if (value.exists) {
-                            //       print("true");
-                            //       Navigator.push(
-                            //         context,
-                            //         MaterialPageRoute(
-                            //           builder: (context) =>
-                            //               ShowRouting(widget.modelDoctorInfo, name),
-                            //         ),
-                            //       );
-                            //     } else {
-                            //       _firestore
-                            //           .collection('queue')
-                            //           .doc('${widget.modelDoctorInfo.docId}')
-                            //           .collection('queue')
-                            //           .doc(uid)
-                            //           .set({
-                            //         'name': name,
-                            //         'time': DateTime.now().millisecondsSinceEpoch,
-                            //         'token': mainController.token.value
-                            //       }).then((value) {
-                            //         print("added");
-                            //       });
-
-                            //       _firestore
-                            //           .collection('queue')
-                            //           .doc('${widget.modelDoctorInfo.docId}')
-                            //           .get()
-                            //           .then((value) {
-                            //         var count = value["count"];
-                            //         _firestore
-                            //             .collection('queue')
-                            //             .doc('${widget.modelDoctorInfo.docId}')
-                            //             .update({'count': ++count}).then((value) {
-                            //           Navigator.push(
-                            //             context,
-                            //             MaterialPageRoute(
-                            //               builder: (context) => ShowRouting(
-                            //                   widget.modelDoctorInfo, name),
-                            //             ),
-                            //           );
-                            //         });
-                            //       });
-                            //     }
-                            //   });
-                            // });
                           },
                           child: Card(
                             color: Colors.black87,

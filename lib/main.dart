@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:clinique/main.controller.dart';
+import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/homepage.dart';
+import 'package:clinique/screens/rating_screen.dart';
+import 'package:clinique/screens/selectedClinic.dart';
+import 'package:clinique/utils/utils.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,9 +19,15 @@ import 'screens/login.dart';
 
 var email;
 
+final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+
 Future<void> backgroundHandler(RemoteMessage message) async {
-  print(message.data.toString());
-  print(message.notification.title);
+  await Firebase.initializeApp();
+  // print(Map.from(json.decode(message.data["doctorModelInfo"]))["fees"]);
+  ModelDoctorInfo modelDoctorInfo = new ModelDoctorInfo.fromMap(
+      Map.from(json.decode(message.data["doctorModelInfo"])));
+
+  print("onbackgroundhandler.listen ontap");
 }
 
 AndroidNotificationChannel channel = const AndroidNotificationChannel(
@@ -26,10 +37,10 @@ AndroidNotificationChannel channel = const AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
@@ -37,16 +48,20 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
+  //This is for token
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  messaging.getToken().then((value) => mainController.changeToken(value));
+  messaging.getToken().then((value) => mainController.changeToken(value!));
+
+  // messaging.getToken().then((value) => print(value));
 
   //*terminated state
-  messaging.getInitialMessage().then((value) {
-    if (value != null) {
-      print(value.notification.title);
-    }
-  });
+  // messaging.getInitialMessage().then((value) {
+  //   if (value != null) {
+  //     print("getInitial message => ${value.notification.title}");
+  //   }
+  //   print("getinitialmessage ontap");
+  // });
 
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
@@ -67,25 +82,26 @@ void main() async {
   }
 
 //*foreground state
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    RemoteNotification notification = message.notification;
-    AndroidNotification android = message.notification?.android;
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   RemoteNotification notification = message.notification;
+  //   AndroidNotification android = message.notification?.android;
 
-    if (notification != null && android != null) {
-      flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              icon: android?.smallIcon,
-              // other properties...
-            ),
-          ));
-    }
-  });
+  //   print(message.data["clinicId"]);
+  //   print("getinitiaonMessage.listen ontap");
+
+  //   if (notification != null && android != null) {
+  //     flutterLocalNotificationsPlugin.show(
+  //         notification.hashCode,
+  //         notification.title,
+  //         notification.body,
+  //         NotificationDetails(
+  //           android: AndroidNotificationDetails(channel.id, channel.name,
+  //               icon: android?.smallIcon, priority: Priority.high
+  //               // other properties...
+  //               ),
+  //         ));
+  //   }
+  // });
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
@@ -125,6 +141,7 @@ void main() async {
 
   runApp(
     MaterialApp(
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         primarySwatch: createMaterialColor(Color(0xffAB1818)),
         // scaffoldBackgroundColor: Color(0xffFFC7C7),
@@ -159,45 +176,105 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     //*terminated state
-    FirebaseMessaging.instance.getInitialMessage().then((value) {
-      if (value != null) {
-        final message = value.data["route"];
+    FirebaseMessaging.instance.getInitialMessage().then((value) async {
+      print("instance.getInitialMessage() ontap");
+      if (value != null &&
+          (await Utils.getFcmId(value.messageId!) != value.messageId)) {
+        Utils.setFcmId(value.messageId!);
 
-        print(message);
-        Navigator.popUntil(context, (route) => route is PageRoute);
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MapActivity()));
+        // final message = value.data["clinicId"];
+
+        print("message from initial message => ${value.data["clinicId"]}");
+
+        ModelDoctorInfo modelDoctorInfo = new ModelDoctorInfo.fromMap(
+            Map.from(json.decode(value.data["doctorModelInfo"])));
+
+        if (value.notification!.title == "Thank You For Visit") {
+          print("equal");
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => RatingScreen(
+                        clinic: value.data["clinicId"],
+                      )));
+        } else {
+          Navigator.of(navigatorKey.currentContext!).push(MaterialPageRoute(
+              builder: (context) => SelectedClinic(modelDoctorInfo)));
+        }
       } else {
-        print("not showing");
+        startTime();
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final routeMessage = message.data["route"];
-      print("onMessageOpenedApp: $routeMessage");
+      print("onMessageOpenedApp: ${message.notification!.body}");
+      print("onMessageOpenedApp: ${message.notification!.title}");
+
+      ModelDoctorInfo modelDoctorInfo = new ModelDoctorInfo.fromMap(
+          Map.from(json.decode(message.data["doctorModelInfo"])));
+
+      Utils.setFcmId(message.messageId!);
 
       // Navigator.popUntil(context, (route) => route is PageRoute);
+      print("onMessageOpenedApp.listen ontap");
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapActivity(),
-        ),
-      );
-    });
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message != null) {
-        print(message.notification.body);
-        print(message.notification.title);
+      if (message.notification != null &&
+          message.notification?.android != null) {
+        if (message.notification!.title == "Thank You For Visit") {
+          print("equal");
+          // Navigator.pop(context);
+          Navigator.of(navigatorKey.currentContext!).push(MaterialPageRoute(
+              builder: (context) => RatingScreen(
+                    clinic: message.data["clinicId"],
+                  )));
+        } else {
+          print("here 1231");
+          print(
+              "message doctormodelinfo => ${message.data["doctorModelInfo"].runtimeType}");
+          Navigator.of(navigatorKey.currentContext!).push(MaterialPageRoute(
+              builder: (context) => SelectedClinic(modelDoctorInfo)));
+        }
       }
     });
 
-    startTime();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("onmessage.listen ontap");
+
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+      print(message.data["clinicId"]);
+      print("getinitiaonMessage.listen ontap");
+
+      if (notification != null && android != null) {
+        print("message from ${message.notification!.body}");
+        print("message from ${message.notification!.title}");
+        print("message from ${message.data["clinicId"]}");
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(channel.id, channel.name,
+                  icon: android.smallIcon, priority: Priority.high
+                  // other properties...
+                  ),
+            ));
+      }
+
+      // if (message.notification.title == "Thank You For Visit") {
+      //   Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //           builder: (context) => RatingScreen(
+      //                 clinic: message.data["clinicId"],
+      //               )));
+      // }
+    });
   }
 
   startTime() async {
-    var duration = new Duration(seconds: 3);
+    var duration = new Duration(seconds: 2);
     return new Timer(duration, route);
   }
 

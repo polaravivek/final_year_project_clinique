@@ -11,7 +11,7 @@ class LocalNotificationService {
             android: AndroidInitializationSettings("@mipmap/ic_launcher"));
 
     _notificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: (String route) async {
+        onSelectNotification: (String? route) async {
       // if (route != null) {
       //   Navigator.of(context).pushNamed(route);
       // }
@@ -32,8 +32,8 @@ class LocalNotificationService {
 
       await _notificationsPlugin.show(
         id,
-        message.notification.title,
-        message.notification.body,
+        message.notification!.title,
+        message.notification!.body,
         notificationDetails,
         payload: message.data["route"],
       );

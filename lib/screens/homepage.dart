@@ -10,7 +10,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<Position> position;
+Future<Position>? position;
 
 class MapActivity extends StatefulWidget {
   @override
@@ -18,26 +18,25 @@ class MapActivity extends StatefulWidget {
 }
 
 class _MapActivityState extends State<MapActivity> {
-  GoogleMapController myController;
+  GoogleMapController? myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   final databaseRef = FirebaseDatabase.instance.reference();
-  final HomePageController homePageController = Get.put(HomePageController());
 
   @override
   void initState() {
     super.initState();
   }
 
-  String dropdownValue = 'Distance';
+  String? dropdownValue = 'Distance';
 
   @override
   Widget build(BuildContext context) {
-    Widget starReview(int value) {
+    Widget starReview(int? value) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: List.generate(5, (index) {
           return Icon(
-            index < value ? Icons.star : Icons.star_border,
+            index < value! ? Icons.star : Icons.star_border,
           );
         }),
       );
@@ -46,39 +45,42 @@ class _MapActivityState extends State<MapActivity> {
     Widget ui(
         int index,
         String img,
-        String clinicName,
-        String address,
-        String doctorName,
-        String eveningTime,
-        String fees,
-        String morningTime,
-        String specialization,
-        double latitude,
-        double longitude,
-        int review,
-        double distance,
-        String docId,
-        String count) {
+        String? clinicName,
+        String? address,
+        String? doctorName,
+        String? eveningTime,
+        String? fees,
+        String? morningTime,
+        String? specialization,
+        double? latitude,
+        double? longitude,
+        int? review,
+        double? distance,
+        String? docId,
+        String? count,
+        HomePageController controller) {
       ModelDoctorInfo modelDoctorInfo;
+
       return GestureDetector(
         onTap: () {
-          if (homePageController.listNew.length != 0) {
-            var item = homePageController.listNew[index];
-            modelDoctorInfo = new ModelDoctorInfo(
-                item.img,
-                item.clinicName,
-                item.address,
-                item.doctorName,
-                item.eveningTime,
-                item.fees,
-                item.morningTime,
-                item.specialization,
-                item.latitude,
-                item.longitude,
-                item.distance,
-                item.review,
-                docId,
-                item.count);
+          if (controller.listNew.length != 0) {
+            var item = controller.listNew[index];
+            modelDoctorInfo = ModelDoctorInfo(
+              address: item.address,
+              clinicName: item.clinicName,
+              count: item.count,
+              distance: item.distance,
+              docId: docId,
+              doctorName: item.doctorName,
+              eveningTime: item.eveningTime,
+              fees: item.fees,
+              img: item.img,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              morningTime: item.morningTime,
+              review: item.review,
+              specialization: item.specialization,
+            );
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -86,22 +88,23 @@ class _MapActivityState extends State<MapActivity> {
               ),
             );
           } else {
-            var item = homePageController.list[index];
-            modelDoctorInfo = new ModelDoctorInfo(
-                item.img,
-                item.clinicName,
-                item.address,
-                item.doctorName,
-                item.eveningTime,
-                item.fees,
-                item.morningTime,
-                item.specialization,
-                item.latitude,
-                item.longitude,
-                item.distance,
-                item.review,
-                docId,
-                item.count);
+            var item = controller.list[index];
+            modelDoctorInfo = ModelDoctorInfo(
+              address: item.address,
+              clinicName: item.clinicName,
+              count: item.count,
+              distance: item.distance,
+              docId: docId,
+              doctorName: item.doctorName,
+              eveningTime: item.eveningTime,
+              fees: item.fees,
+              img: item.img,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              morningTime: item.morningTime,
+              review: item.review,
+              specialization: item.specialization,
+            );
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -109,7 +112,7 @@ class _MapActivityState extends State<MapActivity> {
           }
         },
         onLongPress: () {
-          homePageController.changeCamera(LatLng(latitude, longitude));
+          controller.changeCamera(LatLng(latitude!, longitude!));
         },
         child: Container(
           width: 270,
@@ -123,6 +126,36 @@ class _MapActivityState extends State<MapActivity> {
                 children: [
                   Row(
                     children: [
+                      StreamBuilder(
+                          stream: controller.firestore
+                              .collection('queue')
+                              .snapshots(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (!snapshot.hasData) {
+                              return SizedBox(
+                                  width: 15,
+                                  height: 15,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.0,
+                                  ).center());
+                            }
+                            final snap = snapshot.data!.docs;
+                            String? status;
+                            for (var sn in snap) {
+                              if (sn.id == docId) {
+                                status = sn.get('status');
+                              }
+                            }
+                            return Text("$status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: (status == "close")
+                                      ? Colors.red
+                                      : Colors.green,
+                                  fontSize: 15,
+                                ));
+                          }),
                       Expanded(
                         child: Center(
                           child: Text(
@@ -137,16 +170,21 @@ class _MapActivityState extends State<MapActivity> {
                         ),
                       ),
                       StreamBuilder(
-                          stream: homePageController.firestore
+                          stream: controller.firestore
                               .collection('queue')
                               .snapshots(),
                           builder: (BuildContext context,
                               AsyncSnapshot<QuerySnapshot> snapshot) {
                             if (!snapshot.hasData) {
-                              return CircularProgressIndicator().center();
+                              return SizedBox(
+                                  width: 15,
+                                  height: 15,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.0,
+                                  ).center());
                             }
-                            final snap = snapshot.data.docs;
-                            var count = 0;
+                            final snap = snapshot.data!.docs;
+                            int? count = 0;
                             for (var sn in snap) {
                               if (sn.id == docId) {
                                 count = sn.get('count');
@@ -155,9 +193,10 @@ class _MapActivityState extends State<MapActivity> {
                             return Text("$count",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      (count >= 10) ? Colors.red : Colors.green,
-                                  fontSize: 20,
+                                  color: (count! >= 10)
+                                      ? Colors.red
+                                      : Colors.green,
+                                  fontSize: 17,
                                 ));
                           }),
                       // Text(
@@ -319,18 +358,25 @@ class _MapActivityState extends State<MapActivity> {
                                 height: 40,
                                 child: TextField(
                                   cursorColor: Color(0xFF9B3D3D),
+                                  controller: controller.textEditingController,
                                   onChanged: (v) {
                                     controller.filteredList = controller.list
-                                        .where((element) => (element.address
+                                        .where((element) => (element.address!
                                                 .toLowerCase()
                                                 .contains(v.toLowerCase()) ||
-                                            element.clinicName
+                                            element.clinicName!
                                                 .toLowerCase()
                                                 .contains(v.toLowerCase())))
                                         .toList();
                                   },
                                   textAlignVertical: TextAlignVertical.center,
                                   decoration: InputDecoration(
+                                    suffixIcon:
+                                        Icon(Icons.clear).gestures(onTap: () {
+                                      controller.filteredList.clear();
+                                      controller.textEditingController.clear();
+                                    }),
+                                    // suffix: Icon(Icons.clear),
                                     contentPadding: EdgeInsets.symmetric(
                                         vertical: 10, horizontal: 15),
                                     enabledBorder: OutlineInputBorder(
@@ -357,20 +403,20 @@ class _MapActivityState extends State<MapActivity> {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              width: 20,
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 30),
-                                textStyle: const TextStyle(fontSize: 18),
-                                elevation: 5,
-                                primary: Color(0xFF9B3D3D),
-                              ),
-                              onPressed: () {},
-                              child: Text("Enter"),
-                            ),
+                            // SizedBox(
+                            //   width: 20,
+                            // ),
+                            // ElevatedButton(
+                            //   style: ElevatedButton.styleFrom(
+                            //     padding: EdgeInsets.symmetric(
+                            //         vertical: 5, horizontal: 30),
+                            //     textStyle: const TextStyle(fontSize: 18),
+                            //     elevation: 5,
+                            //     primary: Color(0xFF9B3D3D),
+                            //   ),
+                            //   onPressed: () {},
+                            //   child: Text("Enter"),
+                            // ),
                           ],
                         ),
                       ),
@@ -408,7 +454,7 @@ class _MapActivityState extends State<MapActivity> {
                                     color: Colors.black,
                                   ),
                                   height: 2),
-                              onChanged: (String newValue) {
+                              onChanged: (String? newValue) {
                                 setState(() {
                                   dropdownValue = newValue;
                                 });
@@ -417,7 +463,6 @@ class _MapActivityState extends State<MapActivity> {
                                 'Distance',
                                 'Review',
                                 'Fees',
-                                'Patients'
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
@@ -438,30 +483,30 @@ class _MapActivityState extends State<MapActivity> {
                                 ),
                               ),
                               onPressed: () {
-                                homePageController.listNew.clear();
+                                controller.listNew.clear();
                                 if (dropdownValue == "Distance") {
                                   setState(() {
-                                    homePageController.list.sort(
+                                    controller.list.sort(
                                       (a, b) =>
-                                          a.distance.compareTo(b.distance),
+                                          a.distance!.compareTo(b.distance!),
                                     );
                                   });
                                 } else if (dropdownValue == "Review") {
                                   setState(() {
-                                    homePageController.list.sort(
-                                        (a, b) => a.review.compareTo(b.review));
+                                    controller.list.sort((a, b) =>
+                                        a.review!.compareTo(b.review!));
                                   });
                                 } else if (dropdownValue == "Fees") {
                                   setState(() {
-                                    homePageController.list.sort((a, b) =>
-                                        int.parse(a.fees)
-                                            .compareTo(int.parse(b.fees)));
+                                    controller.list.sort((a, b) =>
+                                        int.parse(a.fees!)
+                                            .compareTo(int.parse(b.fees!)));
                                   });
                                 } else {
                                   setState(() {
-                                    homePageController.list.sort((a, b) =>
-                                        int.parse(a.count)
-                                            .compareTo(int.parse(b.count)));
+                                    controller.list.sort((a, b) =>
+                                        int.parse(a.count!)
+                                            .compareTo(int.parse(b.count!)));
                                   });
                                 }
                               },
@@ -480,28 +525,28 @@ class _MapActivityState extends State<MapActivity> {
                                   textStyle: MaterialStateProperty.all(
                                       TextStyle(color: Colors.white))),
                               onPressed: () {
-                                homePageController.listNew.clear();
+                                controller.listNew.clear();
                                 if (dropdownValue == "Distance") {
                                   setState(() {
-                                    homePageController.list.sort((a, b) =>
-                                        b.distance.compareTo(a.distance));
+                                    controller.list.sort((a, b) =>
+                                        b.distance!.compareTo(a.distance!));
                                   });
                                 } else if (dropdownValue == "Review") {
                                   setState(() {
-                                    homePageController.list.sort(
-                                        (a, b) => b.review.compareTo(a.review));
+                                    controller.list.sort((a, b) =>
+                                        b.review!.compareTo(a.review!));
                                   });
                                 } else if (dropdownValue == "Fees") {
                                   setState(() {
-                                    homePageController.list.sort((a, b) =>
-                                        int.parse(b.fees)
-                                            .compareTo(int.parse(a.fees)));
+                                    controller.list.sort((a, b) =>
+                                        int.parse(b.fees!)
+                                            .compareTo(int.parse(a.fees!)));
                                   });
                                 } else {
                                   setState(() {
-                                    homePageController.list.sort((a, b) =>
-                                        int.parse(b.count)
-                                            .compareTo(int.parse(a.count)));
+                                    controller.list.sort((a, b) =>
+                                        int.parse(b.count!)
+                                            .compareTo(int.parse(a.count!)));
                                   });
                                 }
                               },
@@ -572,7 +617,7 @@ class _MapActivityState extends State<MapActivity> {
                                                           .listNew[index];
                                                       return ui(
                                                           index,
-                                                          item.img,
+                                                          item.img!,
                                                           item.clinicName,
                                                           item.address,
                                                           item.doctorName,
@@ -585,7 +630,8 @@ class _MapActivityState extends State<MapActivity> {
                                                           item.review,
                                                           item.distance,
                                                           item.docId,
-                                                          item.count);
+                                                          item.count,
+                                                          controller);
                                                     },
                                                     itemCount: controller
                                                         .listNew.length,
@@ -606,7 +652,7 @@ class _MapActivityState extends State<MapActivity> {
                                                               .list[index];
                                                           return ui(
                                                               index,
-                                                              item.img,
+                                                              item.img!,
                                                               item.clinicName,
                                                               item.address,
                                                               item.doctorName,
@@ -619,7 +665,8 @@ class _MapActivityState extends State<MapActivity> {
                                                               item.review,
                                                               item.distance,
                                                               item.docId,
-                                                              item.count);
+                                                              item.count,
+                                                              controller);
                                                         },
                                                         itemCount: controller
                                                             .list.length,
@@ -635,7 +682,7 @@ class _MapActivityState extends State<MapActivity> {
                                                       .filteredList[index];
                                                   return ui(
                                                       index,
-                                                      item.img,
+                                                      item.img!,
                                                       item.clinicName,
                                                       item.address,
                                                       item.doctorName,
@@ -648,7 +695,8 @@ class _MapActivityState extends State<MapActivity> {
                                                       item.review,
                                                       item.distance,
                                                       item.docId,
-                                                      item.count);
+                                                      item.count,
+                                                      controller);
                                                 },
                                                 itemCount: controller
                                                     .filteredList.length,

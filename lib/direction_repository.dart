@@ -10,11 +10,11 @@ class DirectionsRepository {
 
   final Dio _dio;
 
-  DirectionsRepository({Dio dio}) : _dio = dio ?? Dio();
+  DirectionsRepository({Dio? dio}) : _dio = dio ?? Dio();
 
-  Future<Directions> getDirections({
-    @required LatLng origin,
-    @required LatLng destination,
+  Future<Directions?> getDirections({
+    required LatLng origin,
+    required LatLng destination,
   }) async {
     print(destination.latitude);
     print(destination.longitude);

@@ -17,7 +17,7 @@ class SelectedClinicController extends GetxController {
 
   @override
   void onInit() {
-    uid = auth.currentUser.uid;
+    uid = auth.currentUser!.uid;
     super.onInit();
   }
 
@@ -25,19 +25,21 @@ class SelectedClinicController extends GetxController {
 
   bool get isLoading => loading.value;
 
+  int get number => num.value;
+
   startLoading() => loading.value = true;
   stopLoading() => loading.value = false;
 
-  joinQueue({BuildContext context, ModelDoctorInfo modelDoctorInfo}) {
+  joinQueue({BuildContext? context, ModelDoctorInfo? modelDoctorInfo}) {
     startLoading();
     print("tapped");
-    String name;
+    String? name;
     ref.child("userinfo").once().then((DataSnapshot snapshot) {
       name = snapshot.value['$uid']['name'];
       print(name);
       _firestore
           .collection('queue')
-          .doc('${modelDoctorInfo.docId}')
+          .doc('${modelDoctorInfo!.docId}')
           .collection('queue')
           .doc(uid)
           .get()
@@ -46,7 +48,7 @@ class SelectedClinicController extends GetxController {
           print("true");
           stopLoading();
           Navigator.push(
-            context,
+            context!,
             MaterialPageRoute(
               builder: (context) => ShowRouting(modelDoctorInfo, name),
             ),
@@ -77,7 +79,7 @@ class SelectedClinicController extends GetxController {
                 .update({'count': ++count}).then((value) {
               stopLoading();
               Navigator.push(
-                context,
+                context!,
                 MaterialPageRoute(
                   builder: (context) => ShowRouting(modelDoctorInfo, name),
                 ),

@@ -9,7 +9,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  String email, password;
+  String? email, password;
   final auth = FirebaseAuth.instance;
 
   @override
@@ -122,16 +122,20 @@ class _LoginState extends State<Login> {
                                 primary: Color(0xFF9B3D3D),
                               ),
                               onPressed: () async {
-                                auth.signInWithEmailAndPassword(
-                                  email: email,
-                                  password: password,
-                                );
+                                auth
+                                    .signInWithEmailAndPassword(
+                                  email: email!,
+                                  password: password!,
+                                )
+                                    .then((value) async {
+                                  if (value.user != null) {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    prefs.setString('email', email!);
 
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                prefs.setString('email', email);
-
-                                Navigator.pushNamed(context, '/homepage');
+                                    Navigator.pushNamed(context, '/homepage');
+                                  }
+                                });
                               },
                               child: Text("Login"),
                             ),
