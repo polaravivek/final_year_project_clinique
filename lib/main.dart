@@ -261,15 +261,6 @@ class _MyAppState extends State<MyApp> {
                   ),
             ));
       }
-
-      // if (message.notification.title == "Thank You For Visit") {
-      //   Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //           builder: (context) => RatingScreen(
-      //                 clinic: message.data["clinicId"],
-      //               )));
-      // }
     });
   }
 

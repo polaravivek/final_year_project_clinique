@@ -89,10 +89,10 @@ class _RouteState extends State<ShowRouting> {
       icon: BitmapDescriptor.defaultMarker,
     );
 
-    final directions = await (DirectionsRepository().getDirections(
-        origin: _center!, destination: pos) as FutureOr<Directions>);
+    final directions = await (DirectionsRepository()
+        .getDirections(origin: _center!, destination: pos));
 
-    print("directions ${directions.totalDistance}");
+    print("directions ${directions?.totalDistance}");
 
     setState(() {
       _info = directions;
@@ -152,6 +152,7 @@ class _RouteState extends State<ShowRouting> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          foregroundColor: Colors.black,
           backgroundColor: Colors.white,
           title: StreamBuilder(
             stream: _firestore
@@ -241,13 +242,21 @@ class _RouteState extends State<ShowRouting> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  '${_info?.totalDistance} ( ${_info?.totalDuration} )',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 18),
-                                ),
+                                (_info?.totalDistance == null &&
+                                        _info?.totalDuration == null)
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.6,
+                                        ).center())
+                                    : Text(
+                                        '${_info?.totalDistance} ( ${_info?.totalDuration} )',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 18),
+                                      ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                       primary: Colors.red,

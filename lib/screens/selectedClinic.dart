@@ -1,8 +1,9 @@
 import 'dart:collection';
+import 'package:clinique/controller/status.controller.dart';
 import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/selected_clinic.controller.dart';
-// import 'package:clinique/screens/showRoute.dart';
+import 'package:clinique/screens/status_screen.dart';
 import 'package:styled_widget/styled_widget.dart';
 import 'package:clinique/widgets/ui.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +16,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 int? _count = 0;
-
-// extension StringExtension on String {
-//   String capitalize() {
-//     return "${this[0].toUpperCase()}${this.substring(1)}";
-//   }
-// }
 
 FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -38,6 +33,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
   var ref;
 
   MainController mainController = Get.find<MainController>();
+  final mainService = Get.put(StatusController());
 
   @override
   void initState() {
@@ -45,6 +41,8 @@ class _SelectedClinicState extends State<SelectedClinic> {
     final fb = FirebaseDatabase.instance;
     ref = fb.reference();
     uid = auth.currentUser!.uid;
+
+    mainService.getAllEvents(widget.modelDoctorInfo.docId!);
 
     super.initState();
   }
@@ -167,7 +165,15 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                         widget.modelDoctorInfo.longitude,
                                         widget.modelDoctorInfo.review,
                                         widget.modelDoctorInfo.distance,
-                                        widget.modelDoctorInfo.docId),
+                                        widget.modelDoctorInfo.docId, () {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  StatusScreen(
+                                                      clinicId: widget
+                                                          .modelDoctorInfo
+                                                          .docId!)));
+                                    }),
                                   ],
                                 ),
                               ),
@@ -458,28 +464,26 @@ class _SelectedClinicState extends State<SelectedClinic> {
                                           Colors.black),
                                     );
                                   } else {
-                                    return Expanded(
-                                      child: ListView.builder(
-                                        scrollDirection: Axis.vertical,
-                                        itemCount: arr.length,
-                                        itemBuilder: (_, index) {
-                                          if (index >= 3) {
-                                            return queueMember(
-                                                "${arr[index]}",
-                                                "${index + 1}.",
-                                                Colors.white,
-                                                Colors.white,
-                                                Colors.black);
-                                          } else {
-                                            return queueMember(
-                                                "${arr[index]}",
-                                                "${index + 1}.",
-                                                Colors.green,
-                                                Colors.lightGreen,
-                                                Colors.white);
-                                          }
-                                        },
-                                      ),
+                                    return ListView.builder(
+                                      scrollDirection: Axis.vertical,
+                                      itemCount: arr.length,
+                                      itemBuilder: (_, index) {
+                                        if (index >= 3) {
+                                          return queueMember(
+                                              "${arr[index]}",
+                                              "${index + 1}.",
+                                              Colors.white,
+                                              Colors.white,
+                                              Colors.black);
+                                        } else {
+                                          return queueMember(
+                                              "${arr[index]}",
+                                              "${index + 1}.",
+                                              Colors.green,
+                                              Colors.lightGreen,
+                                              Colors.white);
+                                        }
+                                      },
                                     );
                                   }
                                 },

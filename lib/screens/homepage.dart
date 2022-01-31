@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clinique/controller/homepage.controller.dart';
+import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/selectedClinic.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ class _MapActivityState extends State<MapActivity> {
   GoogleMapController? myController;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   final databaseRef = FirebaseDatabase.instance.reference();
+
+  MainController mainController = Get.find<MainController>();
 
   @override
   void initState() {
@@ -81,6 +84,9 @@ class _MapActivityState extends State<MapActivity> {
               review: item.review,
               specialization: item.specialization,
             );
+            var status = mainController.getStatus(item.docId!);
+            mainController.changeStatus(status);
+            print(mainController.status);
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -105,6 +111,9 @@ class _MapActivityState extends State<MapActivity> {
               review: item.review,
               specialization: item.specialization,
             );
+            var status = mainController.getStatus(item.docId!);
+            mainController.changeStatus(status);
+            print(mainController.status);
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -199,16 +208,6 @@ class _MapActivityState extends State<MapActivity> {
                                   fontSize: 17,
                                 ));
                           }),
-                      // Text(
-                      //   '$count',
-                      //   style: TextStyle(
-                      //     fontWeight: FontWeight.bold,
-                      //     color: (int.parse(count) >= 10)
-                      //         ? Colors.red
-                      //         : Colors.green,
-                      //     fontSize: 20,
-                      //   ),
-                      // ),
                     ],
                   ),
                   SizedBox(
@@ -321,20 +320,6 @@ class _MapActivityState extends State<MapActivity> {
       );
     }
 
-    // _handleTap(LatLng tappedPoint) {
-    //   listNew.clear();
-
-    //   setState(() {
-    //     list.forEach((element) {
-    //       if (element.latitude == tappedPoint.latitude &&
-    //           element.longitude.toString() ==
-    //               tappedPoint.longitude.toStringAsPrecision(8)) {
-    //         listNew.add(element);
-    //       }
-    //     });
-    //   });
-    // }
-
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(
@@ -403,20 +388,6 @@ class _MapActivityState extends State<MapActivity> {
                                 ),
                               ),
                             ),
-                            // SizedBox(
-                            //   width: 20,
-                            // ),
-                            // ElevatedButton(
-                            //   style: ElevatedButton.styleFrom(
-                            //     padding: EdgeInsets.symmetric(
-                            //         vertical: 5, horizontal: 30),
-                            //     textStyle: const TextStyle(fontSize: 18),
-                            //     elevation: 5,
-                            //     primary: Color(0xFF9B3D3D),
-                            //   ),
-                            //   onPressed: () {},
-                            //   child: Text("Enter"),
-                            // ),
                           ],
                         ),
                       ),

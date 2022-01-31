@@ -14,7 +14,8 @@ Widget ui(
     double? longitude,
     int? review,
     double? distance,
-    String? uid) {
+    String? uid,
+    Function()? onTap) {
   return Padding(
     padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16, bottom: 5),
     child: Container(
@@ -120,7 +121,7 @@ Widget ui(
                   IconButton(
                     color: Color(0xff8A1818),
                     icon: Icon(Icons.arrow_forward),
-                    onPressed: () {},
+                    onPressed: onTap,
                   )
                 ],
               )
