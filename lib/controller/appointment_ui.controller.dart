@@ -23,7 +23,8 @@ class AppointmentUiController extends GetxController {
         .get()
         .then((snapshot) {
       var databaseRef = snapshot!.value;
-      modelDoctorInfo.add(ModelDoctorInfo.fromMap(Map.from(databaseRef)));
+      modelDoctorInfo.add(ModelDoctorInfo.fromMap(
+          Map.from(databaseRef as Map<dynamic, dynamic>)));
       print(modelDoctorInfo[0].clinicName);
     });
   }

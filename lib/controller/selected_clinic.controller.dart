@@ -35,8 +35,9 @@ class SelectedClinicController extends GetxController {
     startLoading();
     print("tapped");
     String? name;
-    ref.child("userinfo").once().then((DataSnapshot snapshot) {
-      name = snapshot.value['$uid']['name'];
+    ref.child("userinfo").get().then((DataSnapshot snapshot) {
+      var data = snapshot.value as Map<dynamic, dynamic>;
+      name = data['$uid']['name'];
       print(name);
       _firestore
           .collection('queue')

@@ -495,68 +495,73 @@ class _SelectedClinicState extends State<SelectedClinic> {
                           ],
                         ),
                       ),
-                      Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              margin: EdgeInsets.only(left: 20),
-                              // width: double.infinity,
-                              height: 70,
-                              child: GestureDetector(
-                                onTap: () {
-                                  controller.joinQueue(
-                                      modelDoctorInfo: widget.modelDoctorInfo,
-                                      context: context);
-                                },
-                                child: Card(
-                                  color: Colors.black87,
-                                  child: Center(
-                                    child: Text(
-                                      'JOIN',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              margin: EdgeInsets.only(right: 20),
-                              // width: double.infinity,
-                              height: 70,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => AppointmentScreen(
-                                            clinicId:
-                                                widget.modelDoctorInfo.docId!,
-                                          )));
-                                },
-                                child: Card(
-                                  color: Color(0xff8A1818),
-                                  child: Center(
-                                    child: Text(
-                                      'BOOK APPOINTMENT',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
                     ],
+                  ),
+                  Positioned(
+                    bottom: 5,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            margin: EdgeInsets.only(left: 20),
+                            // width: double.infinity,
+                            height: 70,
+                            child: GestureDetector(
+                              onTap: () {
+                                controller.joinQueue(
+                                    modelDoctorInfo: widget.modelDoctorInfo,
+                                    context: context);
+                              },
+                              child: Card(
+                                color: Colors.black87,
+                                child: Center(
+                                  child: Text(
+                                    'JOIN',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            margin: EdgeInsets.only(right: 20),
+                            // width: double.infinity,
+                            height: 70,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => AppointmentScreen(
+                                          clinicId:
+                                              widget.modelDoctorInfo.docId!,
+                                        )));
+                              },
+                              child: Card(
+                                color: Color(0xff8A1818),
+                                child: Center(
+                                  child: Text(
+                                    'BOOK APPOINTMENT',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Obx(() => controller.isLoading
                       ? Positioned.fill(

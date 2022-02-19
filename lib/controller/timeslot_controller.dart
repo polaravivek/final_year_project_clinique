@@ -47,8 +47,9 @@ class TimeSlotController extends GetxController {
         "time": timeSelected
       },
     });
-    ref.child("userinfo").once().then((DataSnapshot snapshot) {
-      name = snapshot.value['$uid']['name'];
+    ref.child("userinfo").get().then((DataSnapshot snapshot) {
+      var data = snapshot.value as Map<dynamic, dynamic>;
+      name = data['$uid']['name'];
 
       firestore.collection("appointments").doc(docId).set(
         {

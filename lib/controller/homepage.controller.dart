@@ -95,24 +95,25 @@ class HomePageController extends GetxController {
     databaseRef
         .child("doctorInfo")
         .child('clinicInfo')
-        .once()
+        .get()
         .then((DataSnapshot snapshot) {
-      Map<dynamic, dynamic> databaseRefIndi = snapshot.value;
+      Map<dynamic, dynamic> databaseRefIndi =
+          snapshot.value as Map<dynamic, dynamic>;
       LatLng pos;
       var count = 1;
       late var lat;
       late var long;
 
       databaseRefIndi.forEach((key, value) {
-        Map<dynamic, dynamic>? info = snapshot.value;
+        Map<dynamic, dynamic>? info = snapshot.value as Map<dynamic, dynamic>;
 
         databaseRef
             .child("doctorInfo")
             .child("clinicInfo")
             .child(key.toString())
-            .once()
+            .get()
             .then((DataSnapshot snapshot) {
-          info = snapshot.value;
+          info = snapshot.value as Map<dynamic, dynamic>;
 
           info!.forEach((key, value) {
             if (key == "latitude") {
@@ -173,7 +174,8 @@ class HomePageController extends GetxController {
         .child("clinicInfo")
         .get()
         .then((DataSnapshot? snapshot) {
-      Map<dynamic, dynamic> databaseRefIndi = snapshot!.value;
+      Map<dynamic, dynamic> databaseRefIndi =
+          snapshot!.value as Map<dynamic, dynamic>;
 
       databaseRefIndi.forEach((key, value) {
         final distance = Geolocator.distanceBetween(center.value.latitude,
