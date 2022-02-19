@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:clinique/model/direction_model.dart';
 import 'package:clinique/direction_repository.dart';
 import 'package:clinique/model/doctor_info.dart';
+import 'package:clinique/widgets/navigation_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:styled_widget/styled_widget.dart';
 import 'package:flutter/services.dart';
@@ -151,6 +152,7 @@ class _RouteState extends State<ShowRouting> {
     );
     return SafeArea(
       child: Scaffold(
+        drawer: navigationDrawer(context),
         appBar: AppBar(
           foregroundColor: Colors.black,
           backgroundColor: Colors.white,

@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clinique/controller/homepage.controller.dart';
+import 'package:clinique/controller/selected_clinic.controller.dart';
 import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/selectedClinic.dart';
+import 'package:clinique/widgets/navigation_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:styled_widget/styled_widget.dart';
@@ -24,6 +26,8 @@ class _MapActivityState extends State<MapActivity> {
   final databaseRef = FirebaseDatabase.instance.reference();
 
   MainController mainController = Get.find<MainController>();
+  SelectedClinicController selectedClinicController =
+      Get.put(SelectedClinicController());
 
   @override
   void initState() {
@@ -87,6 +91,7 @@ class _MapActivityState extends State<MapActivity> {
             var status = mainController.getStatus(item.docId!);
             mainController.changeStatus(status);
             print(mainController.status);
+            selectedClinicController.selectedClinicInfo.value = modelDoctorInfo;
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -114,6 +119,7 @@ class _MapActivityState extends State<MapActivity> {
             var status = mainController.getStatus(item.docId!);
             mainController.changeStatus(status);
             print(mainController.status);
+            selectedClinicController.selectedClinicInfo.value = modelDoctorInfo;
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -322,6 +328,7 @@ class _MapActivityState extends State<MapActivity> {
 
     return SafeArea(
       child: Scaffold(
+        drawer: navigationDrawer(context),
         body: SingleChildScrollView(
           child: GetBuilder<HomePageController>(
             init: HomePageController(),

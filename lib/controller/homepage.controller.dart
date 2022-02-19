@@ -21,6 +21,7 @@ class HomePageController extends GetxController {
   List<ModelDoctorInfo> filteredList = <ModelDoctorInfo>[].obs;
   List<ModelDoctorInfo> listNew = <ModelDoctorInfo>[].obs;
   TextEditingController textEditingController = TextEditingController();
+  final RxString selectedString = "Home".obs;
   Rx<LatLng> center = LatLng(0, 0).obs;
 
   Rx<CameraPosition> cameraPosition =
@@ -45,6 +46,8 @@ class HomePageController extends GetxController {
   changeCamera(LatLng target) => myController.animateCamera(
         CameraUpdate.newLatLngZoom(target, 16),
       );
+
+  changeSelected(String selectedMenu) => selectedString.value = selectedMenu;
 
   @override
   void onInit() {

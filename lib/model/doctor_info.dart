@@ -1,6 +1,8 @@
 import 'dart:convert';
 
-class ModelDoctorInfo {
+import 'package:equatable/equatable.dart';
+
+class ModelDoctorInfo extends Equatable {
   final String? clinicName;
   final String? address;
   final String? doctorName;
@@ -36,7 +38,7 @@ class ModelDoctorInfo {
     return {
       'clinicName': clinicName,
       'address': address,
-      'doctorName': doctorName,
+      'name': doctorName,
       'evening time': eveningTime,
       'morning time': morningTime,
       'specialization': specialization,
@@ -51,11 +53,45 @@ class ModelDoctorInfo {
     };
   }
 
+  ModelDoctorInfo copyWith({
+    String? clinicName,
+    String? address,
+    String? doctorName,
+    String? eveningTime,
+    String? morningTime,
+    String? specialization,
+    String? docId,
+    String? img,
+    String? fees,
+    String? count,
+    double? latitude,
+    double? longitude,
+    double? distance,
+    int? review,
+  }) {
+    return ModelDoctorInfo(
+      clinicName: clinicName ?? this.clinicName,
+      address: address ?? this.address,
+      count: count ?? this.count,
+      distance: distance ?? this.distance,
+      docId: docId ?? this.docId,
+      doctorName: doctorName ?? this.doctorName,
+      eveningTime: eveningTime ?? this.eveningTime,
+      fees: fees ?? this.fees,
+      img: img ?? this.img,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      morningTime: morningTime ?? this.morningTime,
+      review: review ?? this.review,
+      specialization: specialization ?? this.specialization,
+    );
+  }
+
   factory ModelDoctorInfo.fromMap(Map<String, dynamic> map) {
     return ModelDoctorInfo(
       clinicName: map['clinicName'] ?? '',
       address: map['address'] ?? '',
-      doctorName: map['doctorName'] ?? '',
+      doctorName: map['name'] ?? '',
       eveningTime: map['evening time'] ?? '',
       morningTime: map['morning time'] ?? '',
       specialization: map['specialization'] ?? '',
@@ -74,4 +110,24 @@ class ModelDoctorInfo {
 
   factory ModelDoctorInfo.fromJson(String source) =>
       ModelDoctorInfo.fromMap(json.decode(source));
+
+  @override
+  List<Object?> get props {
+    return [
+      clinicName,
+      address,
+      doctorName,
+      eveningTime,
+      morningTime,
+      specialization,
+      docId,
+      img,
+      fees,
+      count,
+      latitude,
+      longitude,
+      distance,
+      review
+    ];
+  }
 }

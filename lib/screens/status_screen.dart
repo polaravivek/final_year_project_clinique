@@ -1,5 +1,6 @@
 import 'package:clinique/controller/status.controller.dart';
 import 'package:clinique/widgets/calendar_widget.dart';
+import 'package:clinique/widgets/navigation_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:styled_widget/styled_widget.dart';
@@ -25,6 +26,7 @@ class _StatusScreenState extends State<StatusScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        drawer: navigationDrawer(context),
         appBar: AppBar(
           title: Text("Status").center(),
         ),

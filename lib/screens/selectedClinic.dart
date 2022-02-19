@@ -2,8 +2,10 @@ import 'dart:collection';
 import 'package:clinique/controller/status.controller.dart';
 import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
-import 'package:clinique/screens/selected_clinic.controller.dart';
+import 'package:clinique/screens/appointment_screen.dart';
+import 'package:clinique/controller/selected_clinic.controller.dart';
 import 'package:clinique/screens/status_screen.dart';
+import 'package:clinique/widgets/navigation_drawer.dart';
 import 'package:styled_widget/styled_widget.dart';
 import 'package:clinique/widgets/ui.dart';
 import 'package:flutter/material.dart';
@@ -126,6 +128,7 @@ class _SelectedClinicState extends State<SelectedClinic> {
     List<String?> arr = [];
     return SafeArea(
       child: Scaffold(
+        drawer: navigationDrawer(context),
         backgroundColor: Color(0xffFFC7C7),
         appBar: AppBar(
           backgroundColor: Color(0xff8A1818),
@@ -492,29 +495,66 @@ class _SelectedClinicState extends State<SelectedClinic> {
                           ],
                         ),
                       ),
-                      Container(
-                        margin: EdgeInsets.symmetric(horizontal: 20),
-                        width: double.infinity,
-                        height: 70,
-                        child: GestureDetector(
-                          onTap: () {
-                            controller.joinQueue(
-                                modelDoctorInfo: widget.modelDoctorInfo,
-                                context: context);
-                          },
-                          child: Card(
-                            color: Colors.black87,
-                            child: Center(
-                              child: Text(
-                                'JOIN',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
+                      Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              margin: EdgeInsets.only(left: 20),
+                              // width: double.infinity,
+                              height: 70,
+                              child: GestureDetector(
+                                onTap: () {
+                                  controller.joinQueue(
+                                      modelDoctorInfo: widget.modelDoctorInfo,
+                                      context: context);
+                                },
+                                child: Card(
+                                  color: Colors.black87,
+                                  child: Center(
+                                    child: Text(
+                                      'JOIN',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Expanded(
+                            flex: 3,
+                            child: Container(
+                              margin: EdgeInsets.only(right: 20),
+                              // width: double.infinity,
+                              height: 70,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) => AppointmentScreen(
+                                            clinicId:
+                                                widget.modelDoctorInfo.docId!,
+                                          )));
+                                },
+                                child: Card(
+                                  color: Color(0xff8A1818),
+                                  child: Center(
+                                    child: Text(
+                                      'BOOK APPOINTMENT',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       )
                     ],
                   ),

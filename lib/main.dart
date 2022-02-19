@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clinique/controller/my_appointment.controller.dart';
 import 'package:clinique/main.controller.dart';
 import 'package:clinique/model/doctor_info.dart';
 import 'package:clinique/screens/homepage.dart';
@@ -45,6 +46,7 @@ Future<void> main() async {
   await Firebase.initializeApp();
 
   MainController mainController = Get.put(MainController());
+  Get.lazyPut(() => MyAppointmentController());
 
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 

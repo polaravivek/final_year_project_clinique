@@ -13,6 +13,7 @@ class SelectedClinicController extends GetxController {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final num = 0.obs;
+  final Rx<ModelDoctorInfo> selectedClinicInfo = ModelDoctorInfo().obs;
   final MainController mainController = Get.find<MainController>();
 
   @override
